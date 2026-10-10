@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NewRail · Парк</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="hud-wrapper">
+        <header><h1>NewRail · Парк локомотивов</h1></header>
+        <nav>
+            <a href="../index.html">HUD</a>
+            <a href="park.html">Парк</a>
+            <a href="loco.html">Локомотив</a>
+            <a href="repair.html">Ремонт</a>
+            <a href="qr.html">QR-лист</a>
+        </nav>
+        <main id="content-area">Загрузка...</main>
+    </div>
+    <script type="module">
+        import { listenRecords, searchData } from "../js/data.js";
+        const area = document.getElementById("content-area");
+        let all = [];
+
+        const statusOf = l => {
+          const p = (l.mileage || 0) / (l.next_to || 1);
+          return p >= 0.95 ? "critical" : p >= 0.8 ? "warning" : "ok";
+        };
+        const badge = s => {
+          const m = { ok: ["done","В норме"], warning: ["progress","Требует ТО"], critical: ["waiting","Критично"] };
+          const [c, l] = m[s]; return `<span class="badge ${c}">${l}</span>`;
+        };
+
+        function render() {
+          const q = (document.getElementById("search")?.value || "").trim();
+          const data = q ? searchData(all, q, ["id","locomotive_id","name"]) : all;
+          const rows = data.length ? data.map(l => {
+            const pct = Math.min(100, Math.round(((l.mileage||0)/(l.next_to||1))*100));
+            return `<tr>
+              <td><strong>${l.id || l.locomotive_id || "—"}</strong></td>
+              <td>${(l.mileage||0).toLocaleString("ru-RU")} км</td>
+              <td><div class="progress"><div class="progress-fill" style="width:${pct}%"></div></div><small style="color:var(--text-dim)">${pct}%</small></td>
+              <td>${badge(statusOf(l))}</td>
+              <td><a class="btn" href="loco.html?id=${l.id}">Открыть</a></td>
+            </tr>`;
+          }).join("") : '<tr><td colspan="5"><div class="empty">Нет данных</div></td></tr>';
+
+          area.innerHTML = `
+            <div class="card">
+              <input id="search" placeholder="Поиск по номеру..." style="margin-bottom:16px">
+              <table>
+                <thead><tr><th>Локомотив</th><th>Пробег</th><th>До ТО</th><th>Статус</th><th></th></tr></thead>
+                <tbody>${rows}</tbody>
+              </table>
+            </div>`;
+          document.getElementById("search")?.addEventListener("input", render);
+        }
+        listenRecords("locomotives_telemetry", d => { all = d; render(); });
+    </script>
+</body>
+</html>
