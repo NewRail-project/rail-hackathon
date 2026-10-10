@@ -2,20 +2,28 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>NewRail</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NewRail · Локомотив</title>
     <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
     <div class="hud-wrapper">
-        <header><h1>NewRail</h1></header>
-       <nav class="train-nav">
-    <a href="..." class="wagon">Парк</a>
-    <a href="..." class="wagon">Локомотив</a>
-    <a href="..." class="wagon">Ремонт</a>
-    <a href="..." class="wagon">QR-лист</a>
-    <span class="train-head" aria-hidden="true"></span>
-</nav>
+        <header class="brand-header">
+            <h1>NewRail · Локомотив</h1>
+        </header>
+
+        <nav class="train-nav">
+            <a href="../index.html" class="wagon">HUD</a>
+            <a href="park.html" class="wagon">Парк</a>
+            <a href="loco.html" class="wagon active">Локомотив</a>
+            <a href="repair.html" class="wagon">Ремонт</a>
+            <a href="qr.html" class="wagon">QR-лист</a>
+            <span class="train-head" aria-hidden="true"></span>
+        </nav>
+
         <main id="content-area"><div class="empty">Страница в разработке</div></main>
     </div>
+    <script type="module" src="../js/data.js"></script>
+    <script type="module" src="../js/script.js"></script>
 </body>
 </html>
