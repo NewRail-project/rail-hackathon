@@ -1,5 +1,5 @@
 // =====================================================
-// script.js — UI (toast, beep, modal) + рендер HUD
+// script.js — UI (toast, beep, modal) + HUD только на index.html
 // =====================================================
 
 import { listenRecords } from "./data.js";
@@ -59,71 +59,84 @@ export function toggleModal(id, state) {
 }
 
 // =====================================================
-// HUD — рендер главной панели
+// Определяем, мы на главной (HUD) или нет
 // =====================================================
-const contentArea = document.getElementById("content-area");
-let queueData = [];
-let locoData = [];
+const path = window.location.pathname;
+const isHudPage =
+  path.endsWith("/index.html") ||
+  path === "/rail-hackathon/" ||
+  path.endsWith("/rail-hackathon") ||
+  path === "/" ||
+  !document.body.dataset.page;  // страховка — если на странице нет data-page
 
-function renderHud() {
-  if (!contentArea) return;
+// =====================================================
+// HUD — рендерим ТОЛЬКО на главной
+// =====================================================
+if (isHudPage) {
+  const contentArea = document.getElementById("content-area");
+  let queueData = [];
+  let locoData = [];
 
-  const waiting = queueData.filter(q => q.status === "waiting").length;
-  const inProgress = queueData.filter(q => q.status === "in_progress").length;
-  const done = queueData.filter(q => q.status === "done").length;
+  function renderHud() {
+    if (!contentArea) return;
 
-  const critical = locoData
-    .map(l => ({ ...l, pct: Math.min(100, Math.round(((l.mileage || 0) / (l.next_to || 1)) * 100)) }))
-    .filter(l => l.pct >= 80)
-    .slice(0, 5);
+    const waiting = queueData.filter(q => q.status === "waiting").length;
+    const inProgress = queueData.filter(q => q.status === "in_progress").length;
+    const done = queueData.filter(q => q.status === "done").length;
 
-  const queuePreview = queueData.filter(q => q.status === "waiting").slice(0, 5);
+    const critical = locoData
+      .map(l => ({ ...l, pct: Math.min(100, Math.round(((l.mileage || 0) / (l.next_to || 1)) * 100)) }))
+      .filter(l => l.pct >= 80)
+      .slice(0, 5);
 
-  contentArea.innerHTML = `
-    <div class="grid grid-4">
-      <div class="stat"><div class="label">Всего локомотивов</div><div class="value accent">${locoData.length}</div></div>
-      <div class="stat"><div class="label">Ожидают</div><div class="value red">${waiting}</div></div>
-      <div class="stat"><div class="label">В ремонте</div><div class="value yellow">${inProgress}</div></div>
-      <div class="stat"><div class="label">Готовы</div><div class="value green">${done}</div></div>
-    </div>
-    <div class="grid grid-2" style="margin-top:16px">
-      <div class="card">
-        <h2>Очередь на ТО</h2>
-        <div class="subtitle">Локомотивы в ожидании</div>
-        ${queuePreview.length
-          ? queuePreview.map(q => `
-              <div class="kanban-item">
-                <div class="id">${q.locomotive_id || "—"}</div>
-                <div class="meta">${q.priority === "high" ? '<span class="badge waiting">СРОЧНО</span> ' : ""}${q.timestamp ? new Date(q.timestamp).toLocaleTimeString("ru-RU") : ""}</div>
-              </div>`).join("")
-          : '<div class="empty">Очередь пуста</div>'}
+    const queuePreview = queueData.filter(q => q.status === "waiting").slice(0, 5);
+
+    contentArea.innerHTML = `
+      <div class="grid grid-4">
+        <div class="stat"><div class="label">Всего локомотивов</div><div class="value accent">${locoData.length}</div></div>
+        <div class="stat"><div class="label">Ожидают</div><div class="value red">${waiting}</div></div>
+        <div class="stat"><div class="label">В ремонте</div><div class="value yellow">${inProgress}</div></div>
+        <div class="stat"><div class="label">Готовы</div><div class="value green">${done}</div></div>
       </div>
-      <div class="card">
-        <h2>Требуют внимания</h2>
-        <div class="subtitle">Пробег близок к нормативу</div>
-        ${critical.length
-          ? critical.map(l => `
-              <div class="kanban-item">
-                <div class="id">${l.id || l.locomotive_id}</div>
-                <div class="meta">Пробег: ${l.pct}% до ТО</div>
-                <div class="progress"><div class="progress-fill" style="width:${l.pct}%"></div></div>
-              </div>`).join("")
-          : '<div class="empty">Всё в норме</div>'}
+      <div class="grid grid-2" style="margin-top:16px">
+        <div class="card">
+          <h2>Очередь на ТО</h2>
+          <div class="subtitle">Локомотивы в ожидании</div>
+          ${queuePreview.length
+            ? queuePreview.map(q => `
+                <div class="kanban-item">
+                  <div class="id">${q.locomotive_id || "—"}</div>
+                  <div class="meta">${q.priority === "high" ? '<span class="badge waiting">СРОЧНО</span> ' : ""}${q.timestamp ? new Date(q.timestamp).toLocaleTimeString("ru-RU") : ""}</div>
+                </div>`).join("")
+            : '<div class="empty">Очередь пуста</div>'}
+        </div>
+        <div class="card">
+          <h2>Требуют внимания</h2>
+          <div class="subtitle">Пробег близок к нормативу</div>
+          ${critical.length
+            ? critical.map(l => `
+                <div class="kanban-item">
+                  <div class="id">${l.id || l.locomotive_id}</div>
+                  <div class="meta">Пробег: ${l.pct}% до ТО</div>
+                  <div class="progress"><div class="progress-fill" style="width:${l.pct}%"></div></div>
+                </div>`).join("")
+            : '<div class="empty">Всё в норме</div>'}
+        </div>
       </div>
-    </div>
-  `;
+    `;
+  }
+
+  listenRecords("service_queue", (data) => {
+    queueData = data.sort((a, b) =>
+      (b.priority === "high") - (a.priority === "high") ||
+      (a.timestamp || 0) - (b.timestamp || 0));
+    renderHud();
+  });
+
+  listenRecords("locomotives_telemetry", (data) => {
+    locoData = data;
+    renderHud();
+  });
+
+  renderHud();
 }
-
-listenRecords("service_queue", (data) => {
-  queueData = data.sort((a, b) =>
-    (b.priority === "high") - (a.priority === "high") ||
-    (a.timestamp || 0) - (b.timestamp || 0));
-  renderHud();
-});
-
-listenRecords("locomotives_telemetry", (data) => {
-  locoData = data;
-  renderHud();
-});
-
-renderHud();
