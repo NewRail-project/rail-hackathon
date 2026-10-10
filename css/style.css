@@ -437,3 +437,145 @@ tr:hover td { background: var(--panel-2); }
   nav a { padding: 6px 10px; font-size: 13px; }
   .hud-wrapper { padding: 12px; }
 }
+/* =====================================================
+   TRAIN NAV — поезд из KZ8A в навигации
+   ===================================================== */
+
+.train-nav {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 12px 0 14px 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 24px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+/* ГОЛОВА ПОЕЗДА — стилизованная морда KZ8A */
+.train-head {
+  flex-shrink: 0;
+  width: 46px;
+  height: 30px;
+  margin-right: 6px;
+  background: linear-gradient(180deg, var(--kz8-blue-bright) 0%, var(--kz8-blue) 60%, var(--kz8-blue-dark) 100%);
+  border: 1px solid #0f2a4a;
+  border-radius: 8px 16px 4px 4px;
+  position: relative;
+  box-shadow:
+    inset 0 -6px 0 rgba(0,0,0,.25),
+    inset 0 2px 0 rgba(255,255,255,.15),
+    0 2px 6px rgba(0,0,0,.4);
+  animation: train-idle 3.2s ease-in-out infinite;
+}
+
+/* «лобовое стекло» KZ8A */
+.train-head::before {
+  content: '';
+  position: absolute;
+  top: 5px; left: 8px; right: 8px;
+  height: 10px;
+  background: linear-gradient(180deg, #0b1626 0%, #16283f 100%);
+  border-radius: 3px 6px 3px 3px;
+  box-shadow: inset 0 0 6px rgba(42,127,212,.6);
+}
+
+/* две фары */
+.train-head::after {
+  content: '';
+  position: absolute;
+  bottom: 5px; left: 9px;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--kz8-yellow);
+  box-shadow:
+    20px 0 0 var(--kz8-yellow),
+    0 0 6px var(--kz8-yellow),
+    20px 0 6px var(--kz8-yellow);
+}
+
+/* лёгкое покачивание поезда */
+@keyframes train-idle {
+  0%, 100% { transform: translateY(0) translateX(0); }
+  50%      { transform: translateY(-1px) translateX(2px); }
+}
+
+/* ВАГОНЫ — ссылки */
+.train-nav .wagon {
+  position: relative;
+  flex-shrink: 0;
+  color: #1a2332;
+  background: linear-gradient(180deg, var(--kz8-yellow) 0%, var(--kz8-yellow-dim) 100%);
+  border: 1px solid #8a6a00;
+  border-right: none;
+  padding: 7px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  text-decoration: none;
+  transition: all .2s;
+  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 50%, calc(100% - 8px) 100%, 0 100%);
+  margin-left: -6px;
+}
+
+.train-nav .wagon:first-of-type {
+  border-radius: 4px 0 0 4px;
+  margin-left: 0;
+}
+
+.train-nav .wagon:hover {
+  background: linear-gradient(180deg, #ffdc4a 0%, var(--kz8-yellow) 100%);
+  box-shadow: 0 0 12px rgba(245,197,24,.6);
+  z-index: 2;
+}
+
+.train-nav .wagon:active {
+  transform: translateY(1px);
+}
+
+/* ПОСЛЕДНИЙ ВАГОН — с мордой KZ8A */
+.train-nav .wagon-last {
+  border-right: 1px solid #8a6a00;
+  border-radius: 0 8px 8px 0;
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 50%, calc(100% - 12px) 100%, 0 100%);
+  padding-right: 22px;
+}
+
+/* «фара» на морде последнего вагона */
+.train-nav .wagon-last::after {
+  content: '';
+  position: absolute;
+  right: 8px; top: 50%;
+  transform: translateY(-50%);
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 8px #fff, 0 0 14px var(--kz8-yellow);
+  animation: headlight 2.5s ease-in-out infinite;
+}
+
+@keyframes headlight {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: .55; }
+}
+
+/* лёгкий «дым» из-под головы — опционально */
+.train-nav::before {
+  content: '';
+  position: absolute;
+  left: 10px; bottom: -4px;
+  width: 36px; height: 6px;
+  background: radial-gradient(ellipse at center, rgba(42,127,212,.35), transparent 70%);
+  filter: blur(3px);
+  pointer-events: none;
+  animation: smoke 3s ease-in-out infinite;
+}
+
+@keyframes smoke {
+  0%, 100% { opacity: .5; transform: translateX(0); }
+  50%      { opacity: .8; transform: translateX(4px); }
+}
