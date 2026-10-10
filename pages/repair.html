@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NewRail · Ремонт</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="hud-wrapper">
+        <header><h1>NewRail · Канбан ТО</h1></header>
+        <nav>
+            <a href="../index.html">HUD</a>
+            <a href="park.html">Парк</a>
+            <a href="loco.html">Локомотив</a>
+            <a href="repair.html">Ремонт</a>
+            <a href="qr.html">QR-лист</a>
+        </nav>
+        <main id="content-area">Загрузка...</main>
+    </div>
+    <div class="modal" id="modal-add">
+        <div class="modal-content">
+            <h2>Добавить в очередь</h2>
+            <input id="add-id" placeholder="Номер локомотива" style="margin-bottom:12px">
+            <select id="add-priority" style="margin-bottom:16px">
+                <option value="normal">Обычный</option>
+                <option value="high">Срочный</option>
+            </select>
+            <div style="display:flex;gap:8px">
+                <button class="primary" id="add-submit">Добавить</button>
+                <button id="add-cancel">Отмена</button>
+            </div>
+        </div>
+    </div>
+    <script type="module">
+        import { listenRecords, createRecord, updateRecord, deleteRecord } from "../js/data.js";
+        import { showToast, beep, toggleModal } from "../js/script.js";
+
+        const area = document.getElementById("content-area");
+        let queue = [];
+
+        const card = (q, actions) => {
+          const pr = q.priority === "high" ? '<span class="badge waiting">СРОЧНО</span>' : "";
+          return `<div class="kanban-item">
+            <div class="id">${q.locomotive_id || "—"}</div>
+            <div class="meta">${pr} ${q.timestamp ? new Date(q.timestamp).toLocaleTimeString("ru-RU") : ""}</div>
+            <div style="margin-top:10px;display:flex;gap:6px">${actions}</div>
+          </div>`;
+        };
+
+        function render() {
+          const w = queue.filter(q => q.status === "waiting").map(q => card(q, `<button data-action="start" data-id="${q.id}">Вызвать</button>`)).join("");
+          const p = queue.filter(q => q.status === "in_progress").map(q => card(q, `<button data-action="done" data-id="${q.id}">Завершить</button>`)).join("");
+          const d = queue.filter(q => q.status === "done").map(q => card(q, `<button class="danger" data-action="remove" data-id="${q.id}">Убрать</button>`)).join("");
+
+          area.innerHTML = `
+            <div style="margin-bottom:16px"><button class="primary" id="open-add">+ Добавить в очередь</button></div>
+            <div class="kanban">
+              <div class="kanban-col"><h3>Ожидают</h3>${w || '<div class="empty">Пусто</div>'}</div>
+              <div class="kanban-col"><h3>На канаве</h3>${p || '<div class="empty">Пусто</div>'}</div>
+              <div class="kanban-col"><h3>Готовы</h3>${d || '<div class="empty">Пусто</div>'}</div>
+            </div>`;
+          document.getElementById("open-add").onclick = () => toggleModal("modal-add", true);
+        }
+
+        document.addEventListener("click", async (e) => {
+          const btn = e.target.closest("button[data-action]");
+          if (!btn) return;
+          const { action, id } = btn.dataset;
+          const item = queue.find(q => q.id === id);
+          if (!item) return;
+          if (action === "start") {
+            await updateRecord("service_queue", id, { status: "in_progress", stage: "Осмотр ходовой" });
+            beep(880, 0.15);
+            showToast(`Вызван: ${item.locomotive_id}`, "success");
+          } else if (action === "done") {
+            await updateRecord("service_queue", id, { status: "done", stage: "Готов к выдаче" });
+            showToast(`ТО завершено: ${item.locomotive_id}`, "success");
+          } else if (action === "remove") {
+            await deleteRecord("service_queue", id);
+            showToast("Убрано", "info");
+          }
+        });
+
+        document.getElementById("add-cancel").onclick = () => toggleModal("modal-add", false);
+        document.getElementById("add-submit").onclick = async () => {
+          const id = document.getElementById("add-id").value.trim();
+          const priority = document.getElementById("add-priority").value;
+          if (!id) return showToast("Введите номер", "error");
+          await createRecord("service_queue", { locomotive_id: id, priority, status: "waiting", stage: "Ожидание", timestamp: Date.now() });
+          showToast(`Добавлено: ${id}`, "success");
+          toggleModal("modal-add", false);
+          document.getElementById("add-id").value = "";
+        };
+
+        listenRecords("service_queue", data => {
+          queue = data.sort((a, b) => (b.priority === "high") - (a.priority === "high") || (a.timestamp || 0) - (b.timestamp || 0));
+          render();
+        });
+    </script>
+</body>
+</html>
