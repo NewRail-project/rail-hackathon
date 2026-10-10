@@ -384,67 +384,78 @@ tr:hover td { background: var(--panel-2); }
 }
 
 /* ---------- ГОЛОВА ПОЕЗДА — морда KZ8A ---------- */
+/* ---------- ГОЛОВА ПОЕЗДА — KZ8A по контуру ---------- */
 .train-head {
   flex-shrink: 0;
   position: relative;
-  width: 64px;
-  height: 34px;
+  width: 72px;
+  height: 38px;
   margin-right: 8px;
+  /* Базовая форма кабины KZ8A (нос смотрит ВЛЕВО) */
+  clip-path: polygon(
+    6% 0%,      /* верх слева — начало скругления */
+    88% 0%,     /* верх справа */
+    100% 12%,   /* скос крыши справа */
+    100% 100%,  /* правый нижний угол */
+    0% 100%,    /* левый нижний угол */
+    0% 55%,     /* низ кабины слева — начало носа */
+    6% 20%      /* скос вверх к левому верхнему углу */
+  );
+  /* Ливрея KZ8A: белый капот → синий пояс → тёмный низ */
   background: linear-gradient(
     180deg,
-    #eef2f6 0%,
-    #dfe6ee 45%,
-    #1e5b9e 55%,
+    #f0f4f8 0%,
+    #e2e8ef 38%,
+    #2a7fd4 38%,
+    #1e5b9e 58%,
     #143c6b 100%
   );
-  border: 1px solid #0b2038;
-  border-radius: 18px 10px 6px 6px;
   box-shadow:
-    inset 0 -4px 0 rgba(0,0,0,.25),
-    inset 0 2px 0 rgba(255,255,255,.5),
-    0 2px 6px rgba(0,0,0,.4);
-  overflow: hidden;
+    inset 0 -3px 0 rgba(0,0,0,.35),
+    inset 0 2px 0 rgba(255,255,255,.35);
   animation: train-idle 3.2s ease-in-out infinite;
+  /* Чтобы клип и свечение работали, обёртка прозрачная */
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,.5));
 }
 
-/* лобовое стекло */
+/* Лобовое стекло — тёмная трапеция внутри верхней части */
 .train-head::before {
   content: '';
   position: absolute;
-  top: 4px;
-  left: 6px;
-  right: 4px;
+  top: 5px;
+  left: 8px;
+  right: 8px;
   height: 11px;
   background: linear-gradient(180deg, #0a1626 0%, #16283f 100%);
-  border-radius: 8px 5px 3px 3px;
-  box-shadow: inset 0 0 4px rgba(42,127,212,.5);
+  border-radius: 2px 3px 2px 2px;
+  box-shadow: inset 0 0 5px rgba(42,127,212,.55);
 }
 
-/* жёлтый клин внизу */
+/* Жёлтый клин — как на фото, уходит с середины в правый низ */
 .train-head::after {
   content: '';
   position: absolute;
-  bottom: 0;
-  left: 0;
+  left: 40%;
   right: 0;
-  height: 14px;
-  background:
-    linear-gradient(115deg,
-      transparent 0%, transparent 40%,
-      var(--kz8-yellow) 40%, var(--kz8-yellow) 55%,
-      transparent 55%, transparent 100%),
-    linear-gradient(180deg,
-      transparent 0%, transparent 60%,
-      var(--kz8-yellow-dim) 60%, var(--kz8-yellow-dim) 100%);
+  bottom: 0;
+  height: 55%;
+  background: linear-gradient(
+    115deg,
+    transparent 0%,
+    transparent 35%,
+    var(--kz8-yellow) 35%,
+    var(--kz8-yellow) 50%,
+    transparent 50%,
+    transparent 100%
+  );
   opacity: .95;
   pointer-events: none;
 }
 
 @keyframes train-idle {
   0%, 100% { transform: translateY(0) translateX(0); }
-  50%      { transform: translateY(-1px) translateX(2px); }
+  50%      { transform: translateY(-1px) translateX(-2px); }
 }
-
 /* ---------- ВАГОНЫ ---------- */
 .train-nav .wagon {
   position: relative;
