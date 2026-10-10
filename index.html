@@ -8,14 +8,18 @@
 </head>
 <body>
     <div class="hud-wrapper">
-        <header><h1>Система управления: NewRail</h1></header>
+        <header class="brand-header">
+            <h1>Система управления: NewRail</h1>
+        </header>
+
         <nav class="train-nav">
-    <a href="..." class="wagon">Парк</a>
-    <a href="..." class="wagon">Локомотив</a>
-    <a href="..." class="wagon">Ремонт</a>
-    <a href="..." class="wagon">QR-лист</a>
-    <span class="train-head" aria-hidden="true"></span>
-</nav>
+            <a href="pages/park.html" class="wagon">Парк</a>
+            <a href="pages/loco.html" class="wagon">Локомотив</a>
+            <a href="pages/repair.html" class="wagon">Ремонт</a>
+            <a href="pages/qr.html" class="wagon">QR-лист</a>
+            <span class="train-head" aria-hidden="true"></span>
+        </nav>
+
         <main id="content-area">Ожидание данных...</main>
     </div>
     <script type="module" src="js/data.js"></script>
