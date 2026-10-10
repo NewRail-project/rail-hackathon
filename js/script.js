@@ -59,18 +59,19 @@ export function toggleModal(id, state) {
 }
 
 // =====================================================
-// Определяем, мы на главной (HUD) или нет
+// Определяем, главная это или нет
+// Простой и надёжный способ: только по URL
 // =====================================================
 const path = window.location.pathname;
 const isHudPage =
-  path.endsWith("/index.html") ||
-  path === "/rail-hackathon/" ||
-  path.endsWith("/rail-hackathon") ||
   path === "/" ||
-  !document.body.dataset.page;  // страховка — если на странице нет data-page
+  path === "" ||
+  path.endsWith("/index.html") ||
+  path.endsWith("/rail-hackathon/") ||
+  path.endsWith("/rail-hackathon");
 
 // =====================================================
-// HUD — рендерим ТОЛЬКО на главной
+// HUD — только на главной
 // =====================================================
 if (isHudPage) {
   const contentArea = document.getElementById("content-area");
