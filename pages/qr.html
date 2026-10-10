@@ -2,20 +2,54 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>NewRail</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NewRail · QR-лист</title>
     <link rel="stylesheet" href="../css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
     <div class="hud-wrapper">
-        <header><h1>NewRail</h1></header>
-       <nav class="train-nav">
-    <a href="..." class="wagon">Парк</a>
-    <a href="..." class="wagon">Локомотив</a>
-    <a href="..." class="wagon">Ремонт</a>
-    <a href="..." class="wagon">QR-лист</a>
-    <span class="train-head" aria-hidden="true"></span>
-</nav>
-        <main id="content-area"><div class="empty">Страница в разработке</div></main>
+        <header class="brand-header">
+            <h1>NewRail · QR-лист</h1>
+        </header>
+
+        <nav class="train-nav">
+            <a href="../index.html" class="wagon">HUD</a>
+            <a href="park.html" class="wagon">Парк</a>
+            <a href="loco.html" class="wagon">Локомотив</a>
+            <a href="repair.html" class="wagon">Ремонт</a>
+            <a href="qr.html" class="wagon active">QR-лист</a>
+            <span class="train-head" aria-hidden="true"></span>
+        </nav>
+
+        <main id="content-area">
+            <div class="card" style="text-align:center">
+                <h2>QR-код локомотива</h2>
+                <div class="subtitle">Отсканируйте для приёмки ТУ-152</div>
+                <div id="qr" style="display:inline-block;margin:20px auto;background:#fff;padding:16px;border-radius:12px"></div>
+                <div style="margin-top:16px">
+                    <input id="qr-input" placeholder="Номер локомотива (например KZ8A-014)" style="max-width:320px;margin:0 auto">
+                </div>
+            </div>
+        </main>
     </div>
+
+    <script>
+        const el = document.getElementById('qr');
+        let qrInstance = null;
+        function generate() {
+            const val = (document.getElementById('qr-input').value.trim() || 'KZ8A-014');
+            el.innerHTML = '';
+            qrInstance = new QRCode(el, {
+                text: location.origin + location.pathname + '?loco=' + encodeURIComponent(val),
+                width: 220,
+                height: 220,
+                colorDark: '#0a1c2e',
+                colorLight: '#ffffff'
+            });
+        }
+        document.getElementById('qr-input').addEventListener('input', generate);
+        generate();
+    </script>
 </body>
 </html>
