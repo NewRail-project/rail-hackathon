@@ -3,7 +3,6 @@
    ===================================================== */
 
 :root {
-  /* KZ8A — ливрея */
   --kz8-blue: #1e5b9e;
   --kz8-blue-bright: #2a7fd4;
   --kz8-blue-dark: #143c6b;
@@ -74,30 +73,6 @@ header h1::before {
   50% { opacity: .4; }
 }
 
-/* ---------- NAV ---------- */
-nav {
-  display: flex;
-  gap: 8px;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 24px;
-  flex-wrap: wrap;
-}
-nav a {
-  color: var(--text-dim);
-  text-decoration: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 14px;
-  border: 1px solid transparent;
-  transition: all .2s;
-}
-nav a:hover {
-  color: var(--accent);
-  border-color: var(--border-2);
-  background: var(--panel);
-}
-
 /* ---------- MAIN ---------- */
 main { flex: 1; }
 
@@ -161,7 +136,7 @@ main { flex: 1; }
 .stat .value.yellow { color: var(--kz8-yellow); }
 .stat .value.red { color: var(--danger); }
 
-/* ---------- BUTTONS (KZ8A style) ---------- */
+/* ---------- BUTTONS ---------- */
 button, .btn {
   position: relative;
   background: linear-gradient(180deg, #2a3a52 0%, #1a2332 100%);
@@ -199,7 +174,6 @@ button:active, .btn:active {
   border-bottom-width: 1px;
   box-shadow: inset 0 2px 6px rgba(0,0,0,.5);
 }
-
 button.primary, .btn.primary {
   background: linear-gradient(180deg, var(--kz8-blue-bright) 0%, var(--kz8-blue) 100%);
   color: #fff;
@@ -208,9 +182,7 @@ button.primary, .btn.primary {
   font-weight: 600;
   text-shadow: 0 1px 2px rgba(0,0,0,.3);
 }
-button.primary:hover {
-  box-shadow: 0 0 20px rgba(42,127,212,.6);
-}
+button.primary:hover { box-shadow: 0 0 20px rgba(42,127,212,.6); }
 
 button.warning, .btn.warning {
   background: linear-gradient(180deg, var(--kz8-yellow) 0%, var(--kz8-yellow-dim) 100%);
@@ -219,9 +191,7 @@ button.warning, .btn.warning {
   border-bottom: 2px solid #ffdb4d;
   font-weight: 700;
 }
-button.warning:hover {
-  box-shadow: 0 0 16px rgba(245,197,24,.5);
-}
+button.warning:hover { box-shadow: 0 0 16px rgba(245,197,24,.5); }
 
 button.danger, .btn.danger {
   background: linear-gradient(180deg, #c0392b 0%, #96281b 100%);
@@ -229,11 +199,8 @@ button.danger, .btn.danger {
   border-color: #e74c3c;
   border-bottom: 2px solid #e74c3c;
 }
-button.danger:hover {
-  box-shadow: 0 0 16px rgba(231,76,60,.5);
-}
+button.danger:hover { box-shadow: 0 0 16px rgba(231,76,60,.5); }
 
-/* маленькие action-кнопки в kanban */
 button[data-action] {
   padding: 8px 14px;
   font-size: 11px;
@@ -241,18 +208,9 @@ button[data-action] {
   letter-spacing: .5px;
   background: linear-gradient(180deg, #253044 0%, #1a2332 100%);
 }
-button[data-action="start"] {
-  border-color: var(--kz8-yellow);
-  color: var(--kz8-yellow);
-}
-button[data-action="done"] {
-  border-color: var(--success);
-  color: var(--success);
-}
-button[data-action="remove"] {
-  border-color: var(--danger);
-  color: var(--danger);
-}
+button[data-action="start"] { border-color: var(--kz8-yellow); color: var(--kz8-yellow); }
+button[data-action="done"] { border-color: var(--success); color: var(--success); }
+button[data-action="remove"] { border-color: var(--danger); color: var(--danger); }
 
 /* ---------- INPUTS ---------- */
 input, select, textarea {
@@ -316,9 +274,7 @@ input:focus, select:focus, textarea:focus {
   margin-bottom: 10px;
   transition: all .2s;
 }
-.kanban-item:hover {
-  border-color: var(--kz8-blue-bright);
-}
+.kanban-item:hover { border-color: var(--kz8-blue-bright); }
 .kanban-item .id {
   font-weight: 600;
   color: var(--kz8-blue-bright);
@@ -391,15 +347,13 @@ th {
 }
 tr:hover td { background: var(--panel-2); }
 
-/* ---------- EMPTY ---------- */
+/* ---------- EMPTY / LOADER ---------- */
 .empty {
   text-align: center;
   padding: 40px;
   color: var(--text-dim);
   font-size: 14px;
 }
-
-/* ---------- LOADER ---------- */
 .loader {
   width: 40px;
   height: 40px;
@@ -411,34 +365,8 @@ tr:hover td { background: var(--panel-2); }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ---------- INDICATOR ---------- */
-.indicator {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--kz8-blue-bright);
-  box-shadow: 0 0 8px var(--kz8-blue-bright);
-  display: inline-block;
-  margin-right: 8px;
-  animation: blink 1.5s infinite;
-}
-.indicator.yellow {
-  background: var(--kz8-yellow);
-  box-shadow: 0 0 8px var(--kz8-yellow);
-}
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: .4; }
-}
-
-/* ---------- RESPONSIVE ---------- */
-@media (max-width: 768px) {
-  .kanban { grid-template-columns: 1fr; }
-  nav a { padding: 6px 10px; font-size: 13px; }
-  .hud-wrapper { padding: 12px; }
-}
 /* =====================================================
-   TRAIN NAV — поезд из KZ8A в навигации
+   TRAIN NAV — поезд KZ8A
    ===================================================== */
 
 .train-nav {
@@ -455,11 +383,7 @@ tr:hover td { background: var(--panel-2); }
   scrollbar-color: var(--border) transparent;
 }
 
-/* ГОЛОВА ПОЕЗДА — стилизованная морда KZ8A */
-/* =====================================================
-   TRAIN HEAD — стилизованная морда KZ8A
-   ===================================================== */
-
+/* ---------- ГОЛОВА ПОЕЗДА — морда KZ8A ---------- */
 .train-head {
   flex-shrink: 0;
   position: relative;
@@ -468,13 +392,13 @@ tr:hover td { background: var(--panel-2); }
   margin-right: 8px;
   background: linear-gradient(
     180deg,
-    #eef2f6 0%,       /* светлый верх (белый капот) */
+    #eef2f6 0%,
     #dfe6ee 45%,
-    #1e5b9e 55%,      /* синий пояс */
-    #143c6b 100%      /* тёмно-синий низ */
+    #1e5b9e 55%,
+    #143c6b 100%
   );
   border: 1px solid #0b2038;
-  border-radius: 18px 10px 6px 6px;   /* скруглённый капот справа */
+  border-radius: 18px 10px 6px 6px;
   box-shadow:
     inset 0 -4px 0 rgba(0,0,0,.25),
     inset 0 2px 0 rgba(255,255,255,.5),
@@ -483,7 +407,7 @@ tr:hover td { background: var(--panel-2); }
   animation: train-idle 3.2s ease-in-out infinite;
 }
 
-/* ЛОБОВОЕ СТЕКЛО (тёмный блок сверху) */
+/* лобовое стекло */
 .train-head::before {
   content: '';
   position: absolute;
@@ -496,7 +420,7 @@ tr:hover td { background: var(--panel-2); }
   box-shadow: inset 0 0 4px rgba(42,127,212,.5);
 }
 
-/* ЖЁЛТЫЙ КЛИН ВНИЗУ — «галочка» KZ8A */
+/* жёлтый клин внизу */
 .train-head::after {
   content: '';
   position: absolute;
@@ -505,32 +429,23 @@ tr:hover td { background: var(--panel-2); }
   right: 0;
   height: 14px;
   background:
-    linear-gradient(
-      115deg,
-      transparent 0%,
-      transparent 40%,
-      var(--kz8-yellow) 40%,
-      var(--kz8-yellow) 55%,
-      transparent 55%,
-      transparent 100%
-    ),
-    linear-gradient(
-      180deg,
-      transparent 0%,
-      transparent 60%,
-      var(--kz8-yellow-dim) 60%,
-      var(--kz8-yellow-dim) 100%
-    );
+    linear-gradient(115deg,
+      transparent 0%, transparent 40%,
+      var(--kz8-yellow) 40%, var(--kz8-yellow) 55%,
+      transparent 55%, transparent 100%),
+    linear-gradient(180deg,
+      transparent 0%, transparent 60%,
+      var(--kz8-yellow-dim) 60%, var(--kz8-yellow-dim) 100%);
   opacity: .95;
   pointer-events: none;
 }
 
-/* лёгкое покачивание */
 @keyframes train-idle {
   0%, 100% { transform: translateY(0) translateX(0); }
   50%      { transform: translateY(-1px) translateX(2px); }
 }
-/* ВАГОНЫ — ссылки */
+
+/* ---------- ВАГОНЫ ---------- */
 .train-nav .wagon {
   position: relative;
   flex-shrink: 0;
@@ -548,61 +463,21 @@ tr:hover td { background: var(--panel-2); }
   clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 50%, calc(100% - 8px) 100%, 0 100%);
   margin-left: -6px;
 }
-
 .train-nav .wagon:first-of-type {
   border-radius: 4px 0 0 4px;
   margin-left: 0;
 }
-
 .train-nav .wagon:hover {
   background: linear-gradient(180deg, #ffdc4a 0%, var(--kz8-yellow) 100%);
   box-shadow: 0 0 12px rgba(245,197,24,.6);
   z-index: 2;
 }
+.train-nav .wagon:active { transform: translateY(1px); }
 
-.train-nav .wagon:active {
-  transform: translateY(1px);
-}
-
-/* ПОСЛЕДНИЙ ВАГОН — с мордой KZ8A */
-.train-nav .wagon-last {
-  border-right: 1px solid #8a6a00;
-  border-radius: 0 8px 8px 0;
-  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 50%, calc(100% - 12px) 100%, 0 100%);
-  padding-right: 22px;
-}
-
-/* «фара» на морде последнего вагона */
-.train-nav .wagon-last::after {
-  content: '';
-  position: absolute;
-  right: 8px; top: 50%;
-  transform: translateY(-50%);
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 0 8px #fff, 0 0 14px var(--kz8-yellow);
-  animation: headlight 2.5s ease-in-out infinite;
-}
-
-@keyframes headlight {
-  0%, 100% { opacity: 1; }
-  50%      { opacity: .55; }
-}
-
-/* лёгкий «дым» из-под головы — опционально */
-.train-nav::before {
-  content: '';
-  position: absolute;
-  left: 10px; bottom: -4px;
-  width: 36px; height: 6px;
-  background: radial-gradient(ellipse at center, rgba(42,127,212,.35), transparent 70%);
-  filter: blur(3px);
-  pointer-events: none;
-  animation: smoke 3s ease-in-out infinite;
-}
-
-@keyframes smoke {
-  0%, 100% { opacity: .5; transform: translateX(0); }
-  50%      { opacity: .8; transform: translateX(4px); }
+/* ---------- RESPONSIVE ---------- */
+@media (max-width: 768px) {
+  .kanban { grid-template-columns: 1fr; }
+  .hud-wrapper { padding: 12px; }
+  .train-head { width: 52px; height: 30px; }
+  .train-nav .wagon { padding: 6px 12px; font-size: 11px; }
 }
