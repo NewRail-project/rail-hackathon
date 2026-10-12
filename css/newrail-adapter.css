@@ -1,16 +1,24 @@
+/* =====================================================
+   NewRail · адаптер KZ8A-интерфейса под новую логику
+   Подключать ПОСЛЕ старого style.css
+   ===================================================== */
+
+/* ---------- 1. Конфликт имён: .progress (полоса) vs .badge.progress ---------- */
 .badge.progress {
   height: auto;
   margin: 0;
   overflow: visible;
   border-radius: 20px;
-  background: rgba(245,197,24,.15);
+  background: rgba(220,178,58,.15);
 }
 .progress:not(.badge) { display: block; }
 
-.modal { display: none; }
+/* ---------- 2. Модалки: toggleModal() ставит style.display = flex/none ---------- */
+.modal { display: none; }               /* inline flex из JS перебивает */
 .modal[style*="flex"] { animation: fadeIn .2s ease; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
+/* ---------- 3. Toast: showToast() ---------- */
 .toast {
   position: fixed;
   top: 14px;
@@ -24,20 +32,22 @@
   border-radius: 8px;
   color: var(--text);
   font-size: 13px;
-  z-index: 2000;
-  box-shadow: 0 8px 30px rgba(0,0,0,.5), 0 0 14px rgba(91,200,232,.25);
+  z-index: 2000;                        /* выше .modal (1000) */
+  box-shadow: 0 8px 30px rgba(0,0,0,.5), 0 0 14px rgba(88,181,210,.25);
   transition: opacity .3s, top .3s;
   pointer-events: none;
 }
 .toast.success { border-color: var(--success); }
 .toast.error   { border-color: var(--danger);  }
 
+/* ---------- 4. Валидация: validateForm() ---------- */
 input.invalid, select.invalid, textarea.invalid {
   border-color: var(--danger);
-  box-shadow: 0 0 0 3px rgba(231,76,60,.15);
+  box-shadow: 0 0 0 3px rgba(210,78,65,.15);
 }
 input[type="checkbox"], input[type="radio"] { width: auto; }
 
+/* ---------- 5. Авторизация: devLogin / devPass / devSubmit / devLogout ---------- */
 .auth-card {
   max-width: 380px;
   margin: 60px auto;
@@ -46,7 +56,7 @@ input[type="checkbox"], input[type="radio"] { width: auto; }
   border-top: 3px solid var(--kz8-yellow);
   border-radius: 12px;
   padding: 24px;
-  box-shadow: 0 4px 24px rgba(42,127,212,.12);
+  box-shadow: 0 4px 24px rgba(43,117,192,.12);
 }
 .auth-card h2 { margin-bottom: 16px; color: var(--kz8-blue-bright); font-size: 18px; }
 .field { margin-bottom: 14px; }
@@ -72,6 +82,7 @@ input[type="checkbox"], input[type="radio"] { width: auto; }
 }
 .brand-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 
+/* ---------- 6. Поиск и фильтры: searchData() / filterData() ---------- */
 .toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -81,18 +92,20 @@ input[type="checkbox"], input[type="radio"] { width: auto; }
 .toolbar input[type="search"], .toolbar input[type="text"] { flex: 1 1 220px; width: auto; }
 .toolbar select { flex: 0 1 180px; width: auto; }
 
+/* ---------- 7. Realtime-списки: listenRecords() ---------- */
 .kanban-item { animation: slideIn .25s ease; }
 @keyframes slideIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
 .kanban-item .actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
 .live { color: var(--success); font-size: 12px; }
 
+/* ---------- 8. QR-код (qrcodejs, фон #fff) ---------- */
 .qr-box {
   display: inline-block;
   padding: 12px;
-  background: #fff;
+  background: #fff;                      /* совпадает с colorLight */
   border-radius: 12px;
   border: 3px solid var(--kz8-yellow);
-  box-shadow: 0 0 20px rgba(245,197,24,.25);
+  box-shadow: 0 0 20px rgba(220,178,58,.25);
 }
 .qr-box img, .qr-box canvas { display: block; }
 .qr-wrap { text-align: center; }
@@ -104,12 +117,14 @@ input[type="checkbox"], input[type="radio"] { width: auto; }
   color: var(--kz8-yellow);
 }
 
+/* ---------- 9. Мобильная адаптация ---------- */
 @media (max-width: 768px) {
   .auth-card { margin: 24px auto; }
   .toolbar select { flex: 1 1 100%; }
   .train-nav { overflow-x: auto; scrollbar-width: none; }
   .train-nav::-webkit-scrollbar { display: none; }
 }
+
 .stages{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}.chip{font-size:11px;padding:4px 9px;border-radius:14px;border:1px solid var(--border-2);color:var(--text-dim)}
 .chip.on{background:var(--kz8-yellow);color:#0a1626;border-color:var(--kz8-yellow);font-weight:700}.chip.past{color:var(--success);border-color:var(--success)}
 h3.sec{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin:18px 0 8px}
