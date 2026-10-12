@@ -11,7 +11,7 @@ h3.sec{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--te
 select.inl{width:auto;padding:6px 8px;font-size:12px}.nd{color:var(--text-dim)}.warn{color:var(--kz8-yellow);font-size:12px}
 
 /* ============================================================
-   СЕМАФОР — вставка от ассистента
+   СЕМАФОР — попеременное мигание
    ============================================================ */
 .semaphore {
   position: relative;
@@ -19,47 +19,42 @@ select.inl{width:auto;padding:6px 8px;font-size:12px}.nd{color:var(--text-dim)}.
   flex-direction: column;
   align-items: center;
   align-self: stretch;
-  margin-left: 8px;
+  margin-left: 12px;
 }
-.sem-signals { display: flex; gap: 8px; }
+.sem-signals { display: flex; gap: 12px; }
 .sem-lamp {
-  width: 22px; height: 22px;
+  width: 30px; height: 30px;
   border-radius: 50%;
   border: 3px solid #14171c;
   background: radial-gradient(circle at 40% 40%, #ff5a45, #a01300 70%);
-  box-shadow: 0 0 10px rgba(255,74,58,.85), 0 0 22px rgba(255,74,58,.45), inset 0 0 4px rgba(0,0,0,.6);
-  animation: semBlink 1.6s steps(1, end) infinite;
+  box-shadow:
+    0 0 12px rgba(255,74,58,.85),
+    0 0 26px rgba(255,74,58,.45),
+    inset 0 0 5px rgba(0,0,0,.6);
+  opacity: .18;
+  animation-duration: 2s;
+  animation-iteration-count: infinite;
+  animation-timing-function: steps(1, end);
 }
-@keyframes semBlink {
-  0%, 55%   { opacity: 1; }
-  56%, 100% { opacity: .22; }
+.sem-lamp.left  { animation-name: semLeft;  }
+.sem-lamp.right { animation-name: semRight; }
+@keyframes semLeft {
+  0%, 50%   { opacity: 1; }
+  51%, 100% { opacity: .18; }
+}
+@keyframes semRight {
+  0%, 50%   { opacity: .18; }
+  51%, 100% { opacity: 1; }
 }
 .sem-bracket {
-  width: 52px; height: 4px;
+  width: 68px; height: 4px;
   background: linear-gradient(180deg, #3a3f46, #14171c);
   border-radius: 2px;
-  margin-top: 6px;
+  margin-top: 8px;
 }
-.sem-buttons { display: flex; gap: 4px; margin-top: 10px; }
-.sem-btn {
-  background: linear-gradient(180deg, #1a2332, #10141c);
-  color: var(--text, #e8eef5);
-  border: 1px solid var(--border-2, #3a4553);
-  border-radius: 4px;
-  font-size: 10px; font-weight: 700; letter-spacing: .5px;
-  text-transform: uppercase;
-  padding: 5px 8px; cursor: pointer;
-  transition: all .15s; font-family: inherit; white-space: nowrap;
-}
-.sem-btn:hover {
-  border-color: var(--kz8-yellow, #f5c518);
-  color: var(--kz8-yellow, #f5c518);
-  box-shadow: 0 0 8px rgba(245,197,24,.4);
-}
-.sem-btn:active { transform: translateY(1px); }
 .sem-mast {
-  flex: 1; width: 3px; min-height: 20px;
-  margin-top: 6px; margin-bottom: -1px;
+  flex: 1; width: 4px; min-height: 20px;
+  margin-top: 8px; margin-bottom: -1px;
   background: linear-gradient(180deg, #3a3f46, #14171c);
   border-radius: 2px 2px 0 0;
 }
@@ -73,18 +68,16 @@ select.inl{width:auto;padding:6px 8px;font-size:12px}.nd{color:var(--text-dim)}.
     <select id="role" class="inl"><option value="cust">Заказчик</option><option value="depot">Депо</option></select>
     <input id="org" placeholder="Моя организация" style="width:150px;padding:6px 10px">
     <button id="aiKey" style="padding:8px 12px;display:none">ИИ-ключ</button>
+    <button id="semDepotBtn" style="padding:8px 12px" type="button">Депо</button>
+    <button id="semOrgBtn" style="padding:8px 12px" type="button">Организация</button>
 
     <!-- СЕМАФОР -->
     <div class="semaphore" aria-hidden="true">
       <div class="sem-signals">
-        <span class="sem-lamp red"></span>
-        <span class="sem-lamp red"></span>
+        <span class="sem-lamp left"></span>
+        <span class="sem-lamp right"></span>
       </div>
       <div class="sem-bracket"></div>
-      <div class="sem-buttons">
-        <button class="sem-btn" type="button" data-sem="depot">Депо</button>
-        <button class="sem-btn" type="button" data-sem="org">Организация</button>
-      </div>
       <div class="sem-mast"></div>
     </div>
   </div>
@@ -125,7 +118,7 @@ const hideGroup=(g,t)=>(g.f==='e'&&t==='Тепловоз')||(g.f==='d'&&t==='Э�
 const nodesFor=t=>NODES.filter(g=>!hideGroup(g,t)).flatMap(g=>g.items.map(([k,n])=>[g.g,k,n]));
 const AI_MODEL='llama-3.3-70b-versatile';
 
-/* ---------- собственные всплывающие элементы ---------- */
+/* ---------- всплывающие элементы ---------- */
 let POP=null;
 function closePop(){if(POP){POP.el.remove();POP.owner.classList.remove('open');POP=null}}
 function place(o,el){const r=o.getBoundingClientRect(),h=el.offsetHeight,below=innerHeight-r.bottom,up=below<Math.min(h,240)+12&&r.top>below;el.style.minWidth=r.width+'px';el.style.left=Math.max(8,Math.min(r.left,innerWidth-el.offsetWidth-8))+'px';el.style.maxHeight=Math.max(160,(up?r.top:below)-16)+'px';el.style.top=(up?Math.max(8,r.top-Math.min(h,r.top-16)-4):r.bottom+4)+'px'}
@@ -400,24 +393,15 @@ $('aiKey').onclick=async()=>{const v=await dlg({title:'Ключ ИИ (Groq)',sub
 const q=new URLSearchParams(location.search).get('loco');if(q)openLoco(q);else render();
 
 /* ============================================================
-   Семафор: клики по кнопкам Депо / Организация
+   Кнопки «Депо» / «Организация» рядом с семафором
    ============================================================ */
-document.addEventListener('click', (e) => {
-  const b = e.target.closest('.sem-btn');
-  if (!b) return;
-  e.preventDefault();
-  const kind = b.dataset.sem;
-  if (kind === 'depot') {
-    const sel = document.getElementById('role');
-    if (sel) { sel.value = 'depot'; sel.dispatchEvent(new Event('change', { bubbles: true })); }
-    toast('Режим: Депо', 'success');
-  } else if (kind === 'org') {
-    const inp = document.getElementById('org');
-    if (inp) {
-      inp.focus();
-      inp.select?.();
-      toast('Введите название вашей организации в поле выше', 'info');
-    }
-  }
-}, true);
+document.getElementById('semDepotBtn')?.addEventListener('click', () => {
+  const sel = document.getElementById('role');
+  if (sel) { sel.value = 'depot'; sel.dispatchEvent(new Event('change', { bubbles: true })); }
+  toast('Режим: Депо', 'success');
+});
+document.getElementById('semOrgBtn')?.addEventListener('click', () => {
+  const inp = document.getElementById('org');
+  if (inp) { inp.focus(); inp.select?.(); toast('Введите название вашей организации в поле выше', 'info'); }
+});
 </script></body></html>
