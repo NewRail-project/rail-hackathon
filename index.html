@@ -10,19 +10,17 @@ h3.sec{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--te
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}.kv{font-size:13px;margin:4px 0}.kv b{color:var(--text-dim);font-weight:500}
 select.inl{width:auto;padding:6px 8px;font-size:12px}.nd{color:var(--text-dim)}.warn{color:var(--kz8-yellow);font-size:12px}
 
-/* ---------- КОМПАКТНЫЙ СЕМАФОР В ШАПКЕ ---------- */
-.brand-header{position:relative;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:15px;padding-bottom:15px}
-.rail-semaphore-panel{display:flex;flex-direction:column;align-items:center;z-index:50;flex-shrink:0}
-.semaphore-heads{display:flex;gap:10px;margin-bottom:2px}
-.semaphore-lamp-wrap{position:relative;width:24px;height:24px;background:#0a0d12;border-radius:50%;border:2px solid #2a3a52;display:flex;align-items:center;justify-content:center;box-shadow:inset 0 2px 4px rgba(0,0,0,0.8),0 2px 6px rgba(0,0,0,0.5)}
-.semaphore-lamp-wrap::before{content:'';position:absolute;top:-4px;left:-3px;right:-3px;height:9px;background:linear-gradient(180deg,#1a2332,#0d1520);border:1px solid var(--border-2);border-radius:8px 8px 2px 2px;z-index:2}
-.semaphore-bulb{width:12px;height:12px;background:#1e293b;border-radius:50%;box-shadow:inset 0 1px 3px rgba(0,0,0,0.9)}
-@keyframes blinkLeft{0%,49%{background:#e74c3c;box-shadow:0 0 10px #e74c3c,inset 0 1px 2px rgba(255,255,255,0.5)}50%,100%{background:#5a1813;box-shadow:none}}
-@keyframes blinkRight{0%,49%{background:#5a1813;box-shadow:none}50%,100%{background:#e74c3c;box-shadow:0 0 10px #e74c3c,inset 0 1px 2px rgba(255,255,255,0.5)}}
+/* ---------- НАДЕЖНЫЙ СЕМАФОР И ПАНЕЛЬ ---------- */
+.brand-header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:15px;padding:12px 20px}
+.header-controls{display:flex;align-items:center;gap:15px;flex-wrap:wrap}
+.rail-semaphore-panel{display:flex;align-items:center;gap:8px;background:rgba(10,13,18,0.6);padding:6px 12px;border-radius:8px;border:1px solid var(--border-2)}
+.semaphore-heads{display:flex;gap:8px}
+.semaphore-lamp-wrap{position:relative;width:22px;height:22px;background:#0a0d12;border-radius:50%;border:2px solid #2a3a52;display:flex;align-items:center;justify-content:center}
+.semaphore-bulb{width:12px;height:12px;background:#1e293b;border-radius:50%}
+@keyframes blinkLeft{0%,49%{background:#e74c3c;box-shadow:0 0 8px #e74c3c}50%,100%{background:#5a1813;box-shadow:none}}
+@keyframes blinkRight{0%,49%{background:#5a1813;box-shadow:none}50%,100%{background:#e74c3c;box-shadow:0 0 8px #e74c3c}}
 .semaphore-lamp-wrap.left-signal .semaphore-bulb{animation:blinkLeft 1s infinite}
 .semaphore-lamp-wrap.right-signal .semaphore-bulb{animation:blinkRight 1s infinite}
-.semaphore-pole{width:4px;background:linear-gradient(90deg,#3a4553,#6b7a90,#2a3a52);border-radius:2px;position:relative;box-shadow:1px 0 4px rgba(0,0,0,0.5);height:15px}
-.header-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 </style></head><body><div class="hud-wrapper">
 <header class="brand-header">
   <div style="display:flex;align-items:baseline;gap:15px;">
@@ -31,13 +29,12 @@ select.inl{width:auto;padding:6px 8px;font-size:12px}.nd{color:var(--text-dim)}.
   </div>
   
   <div class="header-controls">
-    <!-- Семафор переезда -->
+    <!-- Светофор-переезд с мигающими огнями -->
     <div class="rail-semaphore-panel">
       <div class="semaphore-heads">
         <div class="semaphore-lamp-wrap left-signal"><div class="semaphore-bulb"></div></div>
         <div class="semaphore-lamp-wrap right-signal"><div class="semaphore-bulb"></div></div>
       </div>
-      <div class="semaphore-pole"></div>
     </div>
     
     <select id="role" class="inl"><option value="cust">Заказчик</option><option value="depot">Депо</option></select>
@@ -60,112 +57,6 @@ const toast=(t,k='')=>{const e=document.createElement('div');e.className='toast 
 const err=e=>toast('Ошибка: '+(e.code||e.message),'error');
 const add=(n,d)=>addDoc(collection(db,n),d).catch(err),upd=(n,id,d)=>updateDoc(doc(db,n,id),d).catch(err);
 
-/* ---------- справочники ---------- */
-const ST={created:'Заявка создана',waiting:'Ожидает приёмки',accepted:'Локомотив принят',inspection:'Первичный осмотр',diagnostics:'Диагностика',defectation:'Дефектовка и замеры',plan:'Согласование плана работ',ready:'Ожидает начала ремонта',disassembly:'Разборка и демонтаж',repair:'В ремонте',parts:'Ожидает детали/материалы',assembly:'Сборка и монтаж',adjust:'Регулировка и настройка',testing:'Испытания и обкатка',check:'Контрольная проверка',finish:'Мойка и окраска',customer:'Ожидает приёмки заказчиком',done:'Ремонт завершён',issued:'Локомотив выдан',paused:'Приостановлен',cancelled:'Отменён'};
-const ORDER=['created','waiting','accepted','inspection','diagnostics','defectation','plan','ready','disassembly','repair','assembly','adjust','testing','check','finish','customer','done','issued'];
-const EQ={unknown:'Состояние не установлено',ok:'Норма по результатам проверки',check:'Требуется доп. проверка',defect:'Обнаружен дефект',repair:'Требуется ремонт',inrepair:'Ремонт выполняется',wait:'Ожидает контрольной проверки',fixed:'Восстановлено по результатам проверки'};
-const EQC={unknown:'unk',ok:'done',fixed:'done',check:'progress',wait:'progress',inrepair:'progress',defect:'waiting',repair:'waiting'};
-const BAD=['check','defect','repair','inrepair','wait'];
-const TO=[1,2,3,4,5,6,7,8].map(n=>'ТО-'+n);
-const SVC=[['','Не указано'],...TO.map(t=>[t,t]),['Текущий ремонт','Текущий ремонт'],['Капитальный ремонт','Капитальный ремонт'],['Осмотр','Осмотр']];
-const NODES=[
-{g:'Ходовая часть',f:'',items:[['wheel','Колёсные пары'],['axlebox','Буксовые узлы'],['spring','Рессорное подвешивание'],['bogie','Рама тележки'],['gear','Тяговый редуктор'],['mab','Моторно-осевые подшипники'],['coupler','Автосцепное устройство']]},
-{g:'Тяговый привод и электрооборудование',f:'',items:[['tm','Тяговые двигатели'],['contactors','Силовые контакторы и реверсор'],['resist','Пусковые и тормозные резисторы'],['battery','Аккумуляторная батарея'],['control','Система управления и блоки'],['cabling','Силовая проводка и кабели']]},
-{g:'Токоприёмник и преобразование',f:'e',items:[['pantograph','Токоприёмник'],['breaker','Главный выключатель'],['transformer','Тяговый трансформатор'],['rectifier','Выпрямитель / инвертор'],['aux','Вспомогательные машины']]},
-{g:'Дизельная установка',f:'d',items:[['diesel','Дизель'],['fuel','Топливная система'],['oil','Масляная система'],['cooling','Система охлаждения'],['turbo','Турбокомпрессор'],['generator','Тяговый генератор']]},
-{g:'Тормоза и пневматика',f:'',items:[['compressor','Компрессор'],['tanks','Резервуары и магистрали'],['brakeeq','Тормозное оборудование (краны, воздухораспределители)'],['brakecyl','Тормозные цилиндры и колодки'],['sand','Пескоподача']]},
-{g:'Кабина и безопасность',f:'',items:[['cab','Кабина машиниста'],['safety','Устройства безопасности (КЛУБ/АЛСН)'],['radio','Радиостанция'],['speedo','Скоростемер / регистратор'],['light','Прожектор и освещение']]},
-{g:'Кузов и вспомогательное',f:'',items:[['body','Кузов'],['vent','Вентиляторы'],['hvac','Отопление и кондиционирование'],['fire','Пожарная сигнализация']]}];
-const NMAP={},NIDX={};let _i=0;NODES.forEach(g=>g.items.forEach(([k,n])=>{NMAP[k]={k,n,g:g.g};NIDX[k]=_i++}));
-const hideGroup=(g,t)=>(g.f==='e'&&t==='Тепловоз')||(g.f==='d'&&t==='Электровоз');
-const nodesFor=t=>NODES.filter(g=>!hideGroup(g,t)).flatMap(g=>g.items.map(([k,n])=>[g.g,k,n]));
-const AI_MODEL='llama-3.3-70b-versatile';
-
-let POP=null;
-function closePop(){if(POP){POP.el.remove();POP.owner.classList.remove('open');POP=null}}
-function place(o,el){const r=o.getBoundingClientRect(),h=el.offsetHeight,below=innerHeight-r.bottom,up=below<Math.min(h,240)+12&&r.top>below;el.style.minWidth=r.width+'px';el.style.left=Math.max(8,Math.min(r.left,innerWidth-el.offsetWidth-8))+'px';el.style.maxHeight=Math.max(160,(up?r.top:below)-16)+'px';el.style.top=(up?Math.max(8,r.top-Math.min(h,r.top-16)-4):r.bottom+4)+'px'}
-function openPop(owner,el){closePop();el.classList.add('pop');document.body.appendChild(el);POP={el,owner};owner.classList.add('open');place(owner,el)}
-document.addEventListener('mousedown',e=>{if(POP&&!POP.el.contains(e.target)&&!POP.owner.contains(e.target))closePop()});
-window.addEventListener('scroll',e=>{if(POP&&!POP.el.contains(e.target))closePop()},true);window.addEventListener('resize',closePop);
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&POP){closePop();e.stopPropagation()}},true);
-const uiOf=el=>el.dataset&&el.dataset.cs?el.nextElementSibling:el.dataset&&el.dataset.dp?el.previousElementSibling:el;
-
-function enhanceSelects(root){root.querySelectorAll('select:not([data-cs])').forEach(s=>{
- s.dataset.cs=1;s.style.display='none';
- const w=document.createElement('div');w.className='cs'+(s.classList.contains('inl')?' inl':'');
- w.innerHTML='<button type="button" class="cs-btn"><span class="cs-v"></span><i class="cs-ar"></i></button>';s.after(w);
- const lab=()=>{const o=s.options[s.selectedIndex];w.querySelector('.cs-v').innerHTML=o&&o.text?esc(o.text):'<span class="nd">Не выбрано</span>'};lab();
- s.addEventListener('change',lab);
- w.querySelector('button').onclick=()=>{if(POP&&POP.owner===w)return closePop();
-  const l=document.createElement('div');l.className='cs-list';
-  l.innerHTML=[...s.options].map((o,i)=>`<div class="cs-opt${i===s.selectedIndex?' sel':''}" data-i="${i}">${o.text?esc(o.text):'<span class="nd">Не выбрано</span>'}</div>`).join('');
-  l.onclick=e=>{const t=e.target.closest('.cs-opt');if(!t)return;s.selectedIndex=+t.dataset.i;s.dispatchEvent(new Event('change',{bubbles:true}));closePop()};
-  openPop(w,l);const sel=l.querySelector('.sel');if(sel)sel.scrollIntoView({block:'nearest'})}})}
-
-const MN=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
-function enhanceDates(root){root.querySelectorAll('input[type=date]:not([data-dp])').forEach(inp=>{
- cons<!DOCTYPE html>
-<html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>LOCO PREDICT</title>
-<link rel="stylesheet" href="css/style.css"><link rel="stylesheet" href="css/newrail-adapter.css"><link rel="stylesheet" href="css/ui.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<style>
-.stages{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}.chip{font-size:11px;padding:4px 9px;border-radius:14px;border:1px solid var(--border-2);color:var(--text-dim)}
-.chip.on{background:var(--kz8-yellow);color:#0a1626;border-color:var(--kz8-yellow);font-weight:700}.chip.past{color:var(--success);border-color:var(--success)}
-h3.sec{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin:18px 0 8px}
-.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}.kv{font-size:13px;margin:4px 0}.kv b{color:var(--text-dim);font-weight:500}
-select.inl{width:auto;padding:6px 8px;font-size:12px}.nd{color:var(--text-dim)}.warn{color:var(--kz8-yellow);font-size:12px}
-
-/* ---------- СЕМAФОР И ПАНЕЛЬ УПРАВЛЕНИЯ ---------- */
-.brand-header{position:relative;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:15px;padding-bottom:15px}
-.header-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.rail-semaphore-panel{display:flex;flex-direction:column;align-items:center;flex-shrink:0}
-.semaphore-heads{display:flex;gap:10px;margin-bottom:2px}
-.semaphore-lamp-wrap{position:relative;width:24px;height:24px;background:#0a0d12;border-radius:50%;border:2px solid #2a3a52;display:flex;align-items:center;justify-content:center;box-shadow:inset 0 2px 4px rgba(0,0,0,0.8),0 2px 6px rgba(0,0,0,0.5)}
-.semaphore-lamp-wrap::before{content:'';position:absolute;top:-4px;left:-3px;right:-3px;height:9px;background:linear-gradient(180deg,#1a2332,#0d1520);border:1px solid var(--border-2);border-radius:8px 8px 2px 2px;z-index:2}
-.semaphore-bulb{width:12px;height:12px;background:#1e293b;border-radius:50%;box-shadow:inset 0 1px 3px rgba(0,0,0,0.9)}
-@keyframes blinkLeft{0%,49%{background:#e74c3c;box-shadow:0 0 10px #e74c3c,inset 0 1px 2px rgba(255,255,255,0.5)}50%,100%{background:#5a1813;box-shadow:none}}
-@keyframes blinkRight{0%,49%{background:#5a1813;box-shadow:none}50%,100%{background:#e74c3c;box-shadow:0 0 10px #e74c3c,inset 0 1px 2px rgba(255,255,255,0.5)}}
-.semaphore-lamp-wrap.left-signal .semaphore-bulb{animation:blinkLeft 1s infinite}
-.semaphore-lamp-wrap.right-signal .semaphore-bulb{animation:blinkRight 1s infinite}
-.semaphore-pole{width:4px;background:linear-gradient(90deg,#3a4553,#6b7a90,#2a3a52);border-radius:2px;position:relative;box-shadow:1px 0 4px rgba(0,0,0,0.5);height:14px}
-</style></head><body><div class="hud-wrapper">
-<header class="brand-header">
-  <div style="display:flex;align-items:baseline;gap:15px;">
-    <h1>LOCO PREDICT</h1>
-    <span class="live" id="live">…</span>
-  </div>
-  
-  <div class="header-controls">
-    <div class="rail-semaphore-panel">
-      <div class="semaphore-heads">
-        <div class="semaphore-lamp-wrap left-signal"><div class="semaphore-bulb"></div></div>
-        <div class="semaphore-lamp-wrap right-signal"><div class="semaphore-bulb"></div></div>
-      </div>
-      <div class="semaphore-pole"></div>
-    </div>
-    
-    <select id="role" class="inl"><option value="cust">Заказчик</option><option value="depot">Депо</option></select>
-    <input id="org" placeholder="Моя организация" style="width:150px;padding:6px 10px">
-    <button id="aiKey" style="padding:8px 12px;display:none">ИИ-ключ</button>
-  </div>
-</header>
-<nav class="train-nav"><a class="wagon active" data-a="home">Локомотивы</a><div class="train-head"></div></nav>
-<main id="view"></main></div>
-<input type="file" id="photoIn" accept="image/*" multiple hidden>
-<script type="module">
-import {initializeApp} from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
-import {getFirestore,collection,addDoc,setDoc,updateDoc,deleteDoc,getDocs,writeBatch,doc,onSnapshot,query,where,arrayUnion} from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
-const db=getFirestore(initializeApp({apiKey:"AIzaSyDoD1pNfA_cfiqCUwAKT7XHfNLOsedmhdU",authDomain:"rail-hackathon-db.firebaseapp.com",projectId:"rail-hackathon-db",storageBucket:"rail-hackathon-db.firebasestorage.app",messagingSenderId:"257494735942",appId:"1:257494735942:web:1aa10dcb7f25c83fcf3e47"}));
-const $=i=>document.getElementById(i),now=()=>Date.now(),todayISO=()=>new Date().toLocaleDateString('sv-SE');
-const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const nd=v=>v||v===0?esc(v):'<span class="nd">Нет данных</span>',fmt=t=>t?new Date(t).toLocaleString('ru-RU'):'—',txt=x=>typeof x==='string'?x:JSON.stringify(x);
-const km=v=>Number(v||0).toLocaleString('ru-RU')+' км';
-const toast=(t,k='')=>{const e=document.createElement('div');e.className='toast '+k;e.textContent=t;document.body.appendChild(e);setTimeout(()=>{e.style.opacity=0;setTimeout(()=>e.remove(),300)},3000)};
-const err=e=>toast('Ошибка: '+(e.code||e.message),'error');
-const add=(n,d)=>addDoc(collection(db,n),d).catch(err),upd=(n,id,d)=>updateDoc(doc(db,n,id),d).catch(err);
-
-/* ---------- справочники ---------- */
 const ST={created:'Заявка создана',waiting:'Ожидает приёмки',accepted:'Локомотив принят',inspection:'Первичный осмотр',diagnostics:'Диагностика',defectation:'Дефектовка и замеры',plan:'Согласование плана работ',ready:'Ожидает начала ремонта',disassembly:'Разборка и демонтаж',repair:'В ремонте',parts:'Ожидает детали/материалы',assembly:'Сборка и монтаж',adjust:'Регулировка и настройка',testing:'Испытания и обкатка',check:'Контрольная проверка',finish:'Мойка и окраска',customer:'Ожидает приёмки заказчиком',done:'Ремонт завершён',issued:'Локомотив выдан',paused:'Приостановлен',cancelled:'Отменён'};
 const ORDER=['created','waiting','accepted','inspection','diagnostics','defectation','plan','ready','disassembly','repair','assembly','adjust','testing','check','finish','customer','done','issued'];
 const EQ={unknown:'Состояние не установлено',ok:'Норма по результатам проверки',check:'Требуется доп. проверка',defect:'Обнаружен дефект',repair:'Требуется ремонт',inrepair:'Ремонт выполняется',wait:'Ожидает контрольной проверки',fixed:'Восстановлено по результатам проверки'};
@@ -216,7 +107,7 @@ function enhanceDates(root){root.querySelectorAll('input[type=date]:not([data-dp
   let [y,m]=(inp.value||todayISO()).split('-').map(Number);m--;const el=document.createElement('div');el.className='dp-pop';
   const draw=()=>{const first=(new Date(y,m,1).getDay()+6)%7,days=new Date(y,m+1,0).getDate(),sel=inp.value,t=todayISO();let c='';for(let i=0;i<first;i++)c+='<span></span>';
    for(let d=1;d<=days;d++){const iso=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;c+=`<button type="button" class="dp-d${iso===sel?' sel':''}${iso===t?' today':''}" data-d="${iso}">${d}</button>`}
-   el.innerHTML=`<div class="dp-h"><button type="button" data-n="-1">‹</button><b>${MN[m]} ${y}</b><button type="button" data-n="1">›</button></div><div class="dp-g">${['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].map(x=>`<i>${x}</i>`).join('')}${c}</div><div class="dp-f"><button type="button" data-d="${t}">Сегодня</button><button type="button" data-d="">Очистить</button></div>`};
+   el.innerHTML=`<div class="dp-h"><button type="button" data-n="-1">‹</button><b>${MN[m]}${y}</b><button type="button" data-n="1">›</button></div><div class="dp-g">${['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].map(x=>`<i>${x}</i>`).join('')}${c}</div><div class="dp-f"><button type="button" data-d="${t}">Сегодня</button><button type="button" data-d="">Очистить</button></div>`};
   el.onclick=e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.n){m+=+b.dataset.n;if(m<0){m=11;y--}if(m>11){m=0;y++}draw();return}
    if(b.dataset.d!==undefined){inp.value=b.dataset.d;inp.dispatchEvent(new Event('change',{bubbles:true}));lab();closePop()}};
   draw();openPop(w,el)}})}
@@ -226,10 +117,10 @@ function nodePicker(name,sel=[],type=''){return`<div class="npick">${NODES.map(g
 const pickedNodes=(root,name)=>[...root.querySelectorAll(`.ng:not([hidden]) input[name="${name}"]:checked`)].map(i=>i.value);
 function fieldHTML(f){const v=f.value??'';let c;
  if(f.type==='select')c=`<select name="${f.name}">${f.options.map(o=>{const [a,b]=Array.isArray(o)?o:[o,o];return`<option value="${esc(a)}" ${String(a)===String(v)?'selected':''}>${esc(b)}</option>`}).join('')}</select>`;
- else if(f.type==='area')c=`<textarea name="${f.name}" rows="3" placeholder="${esc(f.ph||'')}">${esc(v)}</textarea>`;
+ else if(f.type==='area')c=`<textarea name="${f.name}" rows="3" placeholder="${esc(f.ph\vert{}\vert{}'')}">${esc(v)}</textarea>`;
  else if(f.type==='nodes')c=nodePicker(f.name,f.value||[],f.nodeType);
  else c=`<input name="${f.name}" type="${f.type||'text'}" value="${esc(v)}" placeholder="${esc(f.ph||'')}" autocomplete="off">`;
- return`<div class="field"><label>${esc(f.label||'')}${f.req?' *':''}</label>${c}${f.hint?`<div class="hint">${esc(f.hint)}</div>`:''}</div>`}
+ return`<div class="field"><label>${esc(f.label\vert{}\vert{}'')}${f.req?' *':''}</label>${c}${f.hint?`<div class="hint">${esc(f.hint)}</div>`:''}</div>`}
 function dlg(o){return new Promise(res=>{const fields=o.fields||[],bg=document.createElement('div');bg.className='dlg-bg';
  bg.innerHTML=`<form class="dlg ${o.danger?'danger-d':''}" novalidate><h2>${esc(o.title)}</h2>${o.sub?`<div class="subtitle">${esc(o.sub)}</div>`:''}${o.text?`<p class="dlg-text">${esc(o.text)}</p>`:''}${fields.map(fieldHTML).join('')}<div class="dlg-act"><button type="button" data-x="c">${esc(o.cancel||'Отмена')}</button><button class="${o.danger?'danger':'primary'}">${esc(o.ok||'Готово')}</button></div></form>`;
  document.body.appendChild(bg);enhance(bg);const f=bg.querySelector('form');
@@ -268,7 +159,7 @@ function list(){
  const dep=isDepot(),org=myOrg(),ls=byNew(D.locos.filter(l=>dep||(org&&l.org===org)));
  let h=`<div class="toolbar"><button class="primary" data-a="new">+ Сдать локомотив в ремонт</button>${dep?'<button data-a="seed">Демо-данные</button>':''}</div>`;
  if(!dep&&!org&&!ls.length)h+='<div class="empty">Введите название вашей организации в шапке или переключите роль на «Депо», чтобы увидеть список локомотивов</div>';
- else h+=ls.length?ls.map(l=>`<div class="kanban-item"><div class="row"><div class="id">${esc(l.number)} · ${esc(l.series)}</div>${status(l)}</div><div class="meta">${esc(l.org)} · ${Number(l.mileage||0).toLocaleString('ru-RU')} км</div><div class="actions"><button data-a="open" data-id="${l.id}">Паспорт</button><button class="danger" data-a="delloco" data-id="${l.id}">Удалить</button></div></div>`).join(''):'<div class="empty">Локомотивов пока нет</div>';
+ else h+=ls.length?ls.map(l=>`<div class="kanban-item"><div class="row"><div class="id">${esc(l.number)} · ${esc(l.series)}</div>${status(l)}</div><div class="meta">${esc(l.org)} ·${Number(l.mileage||0).toLocaleString('ru-RU')} км</div><div class="actions"><button data-a="open" data-id="${l.id}">Паспорт</button><button class="danger" data-a="delloco" data-id="${l.id}">Удалить</button></div></div>`).join(''):'<div class="empty">Локомотивов пока нет</div>';
  return h}
 
 const FORM=[['Локомотив',[['number','Номер*'],['series','Серия и модель*'],['type','Тип',['','Электровоз','Тепловоз','Маневровый']],['factoryNo','Заводской номер'],['year','Год выпуска','number'],['depot','Депо приписки'],['mileage','Текущий пробег, км*','number'],['mileageDate','Дата подтверждения пробега','date'],['lastTO','Дата последнего ТО','date'],['lastTOType','Вид последнего ТО',['',...TO]],['prevRepair','Предыдущий ремонт']]],
@@ -276,7 +167,7 @@ const FORM=[['Локомотив',[['number','Номер*'],['series','Сери�
 ['Причина поступления',[['reason','Причина*',['','Плановое ТО','Обнаруженная неисправность','Внеплановый ремонт','Диагностическая проверка','Повторное обращение','Другая']],['description','Описание проблемы','area'],['symptoms','Симптомы','area'],['found','Когда обнаружена'],['conditions','При каких условиях проявляется'],['nodes','Где поломка — отметьте узлы (необязательно)','nodes'],['prechecks','Проведённые проверки'],['notes','Дополнительные замечания']]],
 ['Состояние при сдаче',[['external','Внешнее состояние','area'],['known','Известные неисправности','area'],['complete','Комплектность'],['handover','Замечания при передаче']]]];
 function openForm(){S.v='form';const dep=isDepot();
- $('view').innerHTML='<form id="intake" class="card" novalidate><h2>Сдать локомотив в ремонт</h2><div class="subtitle">Неизвестные данные оставьте пустыми — они не будут заменены выдуманными</div>'+FORM.map(([t,fs])=>`<h3 class="sec">${t}</h3><div class="grid grid-2">`+fs.map(([n,l,k])=>`<div class="field${k==='nodes'?' wide':''}"><label>${l}</label>`+(Array.isArray(k)?`<select name="${n}">${k.map(o=>`<option>${o}</option>`).join('')}</select>`:k==='area'?`<textarea name="${n}" rows="2"></textarea>`:k==='nodes'?nodePicker('node',[],''):`<input name="${n}" type="${k||'text'}" ${n==='org'&&!dep?`value="${esc(myOrg())}"`:''} autocomplete="off">`)+'</div>').join('')+'</div>').join('')+
+ $('view').innerHTML='<form id="intake" class="card" novalidate><h2>Сдать локомотив в ремонт</h2><div class="subtitle">Неизвестные данные оставьте пустыми — они не будут заменены выдуманными</div>'+FORM.map(([t,fs])=>`<h3 class="sec">${t}</h3><div class="grid grid-2">`+fs.map(([n,l,k])=>`<div class="field${k==='nodes'?' wide':''}"><label>${l}</label>`+(Array.isArray(k)?`<select name="${n}">${k.map(o=>`<option>${o}</option>`).join('')}</select>`:k==='area'?`<textarea name="${n}" rows="2"></textarea>`:k==='nodes'?nodePicker('node',[],''):`<input name="${n}" type="${k\vert{}\vert{}'text'}" ${n==='org'&&!dep?`value="${esc(myOrg())}"`:''} autocomplete="off">`)+'</div>').join('')+'</div>').join('')+
  '<h3 class="sec">Фото</h3><label class="filebtn"><input type="file" id="fphotos" accept="image/*" multiple hidden><span>+ Прикрепить фото</span></label> <span class="meta" id="fcount"></span><div class="hint">Фото неисправности, узла или общего вида. Попадут в паспорт локомотива.</div>'+
  '<div class="row" style="justify-content:flex-start;margin-top:20px"><button class="primary">Зарегистрировать</button><button type="button" data-a="home">Отмена</button></div></form>';
  enhance($('view'));const fm=$('intake');
@@ -310,7 +201,7 @@ async function ensureNodes(id,type,sel=[],by='',o={}){
    else if(pick&&okFrom(e.state)){b.update(doc(db,'equipment',e.id),{state:to,history:arrayUnion(h)});n++}}
   if(n)await b.commit();return n}catch(e){err(e);return 0}}
 const eqRow=(q,dep)=>{const svc=[q.svcCode,q.svcDate,q.svcMileage!=null&&q.svcMileage!==''?km(q.svcMileage):''].filter(Boolean).join(' · '),h=(q.history||[]),lh=h[h.length-1];
- return`<div class="nrow"><div><div class="nname">${esc(q.name)}</div><div class="meta">Последнее обслуживание: ${svc?esc(svc):'<span class="nd">нет данных</span>'}</div>${q.note?`<div class="meta">Примечание: ${esc(q.note)}</div>`:''}${lh?`<div class="meta">Изменений состояния: ${h.length} · последнее: ${esc(lh.reason)} (${fmt(lh.ts)})</div>`:''}</div><div class="nact"><span class="badge ${EQC[q.state]||'unk'}">${EQ[q.state]||'—'}</span>${dep?`<button data-a="eqe" data-id="${q.id}">Изменить</button>`:''}</div></div>`};
+ return`<div class="nrow"><div><div class="nname">${esc(q.name)}</div><div class="meta">Последнее обслуживание: ${svc?esc(svc):'<span class="nd">нет данных</span>'}</div>${q.note?`<div class="meta">Примечание: ${esc(q.note)}</div>`:''}${lh?`<div class="meta">Изменений состояния: ${h.length} · последнее: ${esc(lh.reason)} (${fmt(lh.ts)})</div>`:''}</div><div class="nact"><span class="badge ${EQC[q.state]||'unk'}">${EQ[q.state]\vert{}\vert{}'—'}</span>${dep?`<button data-a="eqe" data-id="${q.id}">Изменить</button>`:''}</div></div>`};
 function eqCard(l,dep){const eq=[...D.equipment].sort((a,b)=>(NIDX[a.key]??999)-(NIDX[b.key]??999)),tot=eq.length,n=f=>eq.filter(q=>f(q.state)).length,
  ok=n(s=>['ok','fixed'].includes(s)),bad=n(s=>BAD.includes(s)),crit=n(s=>['defect','repair'].includes(s)),unk=tot-ok-bad,missing=nodesFor(l.type).filter(([,k])=>!eq.some(q=>q.key===k)).length;
  const verdict=!tot?'Узлы не внесены. Отсутствие записей не означает исправность.':crit?`Есть неисправные узлы: ${crit}`:bad?`Есть узлы, требующие проверки или ремонта: ${bad}`:unk===tot?'Состояние узлов пока не установлено':unk?`Проверено ${tot-unk} из ${tot} узлов, замечаний нет`:'По всем узлам замечаний нет';
@@ -331,7 +222,7 @@ async function uploadPhotos(files,o){let ok=0;for(const f of files){try{const da
 function photoCard(){const ps=byNew(D.photos);
  return`<div class="card"><h2>Фото</h2><div class="subtitle">Фото неисправностей, узлов и общего вида. Сжимаются и хранятся в базе данных.</div><div class="actions" style="margin:0 0 12px"><button class="primary" data-a="photo">+ Добавить фото</button></div>${ps.length?`<div class="pgrid">${ps.map(p=>`<div class="ph" data-a="pv" data-id="${p.id}"><img src="${esc(p.data)}" alt="" loading="lazy"><span>${esc(p.nodeName||p.caption||'Фото')}</span></div>`).join('')}</div>`:'<div class="nd">Фото пока нет</div>'}</div>`}
 function lightbox(p,canDel){const o=document.createElement('div');o.className='lb';
- o.innerHTML=`<div class="lb-in"><img src="${esc(p.data)}" alt=""><div class="lb-b"><div><b>${esc(p.caption||'Без подписи')}</b><div class="meta">${p.nodeName?esc(p.nodeName)+' · ':''}${fmt(p.ts)} · ${p.by==='depot'?'депо':'заказчик'}</div></div><div class="actions" style="margin:0">${canDel?'<button class="danger" data-x="d">Удалить</button>':''}<button data-x="c">Закрыть</button></div></div></div>`;
+ o.innerHTML=`<div class="lb-in"><img src="${esc(p.data)}" alt=""><div class="lb-b"><div><b>${esc(p.caption||'Без подписи')}</b><div class="meta">${p.nodeName?esc(p.nodeName)+' · ':''}${fmt(p.ts)} ·${p.by==='depot'?'депо':'заказчик'}</div></div><div class="actions" style="margin:0">${canDel?'<button class="danger" data-x="d">Удалить</button>':''}<button data-x="c">Закрыть</button></div></div></div>`;
  document.body.appendChild(o);const kd=e=>{if(e.key==='Escape')cl()},cl=()=>{document.removeEventListener('keydown',kd);o.remove()};document.addEventListener('keydown',kd);
  o.onclick=async e=>{const x=e.target.closest('[data-x]');if(e.target===o||(x&&x.dataset.x==='c'))return cl();
   if(x&&x.dataset.x==='d'){if(await dlg({title:'Удалить фото?',text:'Фото будет удалено из паспорта без возможности восстановления.',ok:'Удалить',danger:true})){cl();deleteDoc(doc(db,'photos',p.id)).then(()=>toast('Фото удалено','success')).catch(err)}}}}
@@ -352,7 +243,7 @@ async function delLoco(id){const l=D.locos.find(x=>x.id===id);if(!l)return;
 function openLoco(id){locoSubs.forEach(u=>u());caseSubs.forEach(u=>u());caseSubs=[];Object.assign(D,{equipment:[],miles:[],tos:[],tasks:[],hist:[],ai:[],photos:[]});
  S={v:'loco',id,cid:null,wc:null,eqf:false};locoSubs=[watch('equipment','equipment','locoId',id),watch('mileageReadings','miles','locoId',id),watch('maintenanceRecords','tos','locoId',id),watch('photos','photos','locoId',id)];render()}
 function ensureCase(c){if(c&&S.wc!==c.id){S.wc=c.id;caseSubs.forEach(u=>u());D.tasks=[];D.hist=[];D.ai=[];caseSubs=[watch('maintenanceTasks','tasks','caseId',c.id),watch('statusHistory','hist','caseId',c.id),watch('aiAnalyses','ai','caseId',c.id)]}}
-const kv=(l,v)=>`<div class="kv"><b>${l}:</b> ${nd(v)}</div>`;
+const kv=(l,v)=>`<div class="kv"><b>${l}:</b>${nd(v)}</div>`;
 function passport(){
  const l=D.locos.find(x=>x.id===S.id);if(!l)return'<div class="empty">Загрузка паспорта…</div>';
  const dep=isDepot();if(!dep&&l.org!==myOrg())return'<div class="empty">Нет доступа: локомотив принадлежит другой организации<br><br><button data-a="home">Назад</button></div>';
@@ -361,26 +252,24 @@ function passport(){
  return`<div class="row"><button data-a="home">← К списку</button><div class="row" style="gap:8px">${status(l)}<button class="danger" data-a="delloco" data-id="${l.id}">Удалить паспорт</button></div></div>
  <div class="card"><h2>Цифровой паспорт ${esc(l.number)}</h2><div class="row" style="align-items:flex-start"><div>${kv('Серия и модель',l.series)}${kv('Тип',l.type)}${kv('Заводской номер',l.factoryNo)}${kv('Год выпуска',l.year)}${kv('Организация-владелец',l.org)}${kv('Депо приписки',l.depot)}</div><div><div id="qr"></div><div class="meta">QR → постоянная страница локомотива</div></div></div></div>
  <div class="card"><h2>Эксплуатация</h2>${kv('Подтверждённый пробег',l.mileage!=null?Number(l.mileage).toLocaleString('ru-RU')+' км (на '+(l.mileageDate||'дату не указано')+')':'')}${kv('Последнее ТО',l.lastTO?l.lastTOType+' · '+l.lastTO:'')}${kv('Предыдущий ремонт',l.prevRepair)}
- <h3 class="sec">История пробега</h3>${ms.map(m=>`<div class="kv">${Number(m.value).toLocaleString('ru-RU')} км · ${fmt(m.ts)} ·${esc(m.source)} · ${esc(m.by\vert{}\vert{}'')}${m.comment?'· «'+esc(m.comment)+'»':''}</div>`).join('')||'<div class="nd">Нет данных</div>'}${dep?'<div class="actions"><button data-a="mile">+ Показание пробега</button></div>':''}
- <h3 class="sec">История ТО-1 — ТО-8</h3>${tos.map(t=>`<div class="kv">${esc(t.code)} · ${esc(t.date)} ·${Number(t.mileage||0).toLocaleString('ru-RU')} км</div>`).join('')||'<div class="nd">Нет данных</div>'}${dep?'<div class="actions"><button data-a="to">+ Выполнено ТО</button><button data-a="rule">+ Правило ТО для серии</button></div>':''}
- <h3 class="sec">Ближайшее ТО</h3>${nextTO(l,tos)}</div>
- ${eqCard(l,dep)}
- <div class="card"><h2>Ремонты</h2><div class="actions">${cs.map(x=>`<button data-a="case" data-id="${x.id}" ${c&&x.id===c.id?'class="primary"':''}>№${x.caseNo} ·${ST[x.stage]}</button>`).join('')||'<span class="nd">Ремонтных случаев нет</span>'}</div>${c?caseBody(c,l,dep):''}</div>
+ <h3 class="sec">История пробега</h3>${ms.map(m=>`<div class="kv">${Number(m.value).toLocaleString('ru-RU')} км · ${fmt(m.ts)} · ${esc(m.source)} · ${esc(m.by||'')} ${m.comment?'· «'+esc(m.comment)+'»':''}</div>`).join('')||'<div class="nd">Нет данных</div>'}${dep?'<div class="actions"><button data-a="mile">+ Показание пробега</button></div>':''}
+ <h3 class="sec">История ТО-1 — ТО-8</h3>${tos.map(t=>`<div class="kv">${esc(t.code)} · ${esc(t.date)} · ${Number(t.mileage||0).toLocaleString('ru-RU')} км</div>`).join('')||'<div class="nd">Нет данных</div>'}${dep?'<div class="actions"><button data-a="to">+ Выполнено ТО</button><button data-a="rule">+ Правило ТО для серии</button></div>':''}
+ <h3 class="sec">Ближайшее ТО</h3>${nextTO(l,tos)}</div>${eqCard(l,dep)}
+ <div class="card"><h2>Ремонты</h2><div class="actions">${cs.map(x=>`<button data-a="case" data-id="${x.id}" ${c&&x.id===c.id?'class="primary"':''}>№${x.caseNo} · ${ST[x.stage]}</button>`).join('')||'<span class="nd">Ремонтных случаев нет</span>'}</div>${c?caseBody(c,l,dep):''}</div>
  ${photoCard()}`}
 function nextTO(l,tos){const rs=D.rules.filter(r=>r.series===l.series);if(!rs.length)return`<div class="warn">Правила ТО для серии «${esc(l.series)}» не заданы — срок рассчитать нельзя. Не выдумываем нормативы: добавьте утверждённое правило.</div>`;
- return rs.map(r=>{const last=byNew(tos.filter(t=>t.code===r.code))[0];if(!last)return`<div class="kv">${esc(r.code)}: нет записи о выполнении — расчёт невозможен</div>`;const left=Number(last.mileage)+Number(r.intervalKm)-Number(l.mileage||0);return`<div class="kv">${esc(r.code)}: ${left<0?'<span style="color:var(--danger)">просрочено на '+(-left)+' км</span>':'осталось '+left+' км'} · правило: ${esc(r.intervalKm)} км (источник: ${esc(r.source||'не указан')})</div>`}).join('')}
+ return rs.map(r=>{const last=byNew(tos.filter(t=>t.code===r.code))[0];if(!last)return`<div class="kv">${esc(r.code)}: нет записи о выполнении — расчёт невозможен</div>`;const left=Number(last.mileage)+Number(r.intervalKm)-Number(l.mileage||0);return`<div class="kv">${esc(r.code)}:${left<0?'<span style="color:var(--danger)">просрочено на '+(-left)+' км</span>':'осталось '+left+' км'} · правило: ${esc(r.intervalKm)} км (источник: ${esc(r.source||'не указан')})</div>`}).join('')}
 
 function caseBody(c,l,dep){
  const T=D.tasks.filter(t=>t.caseId===c.id),done=T.filter(t=>t.status==='done').length,pct=T.length?Math.round(done/T.length*100):0,eff=['parts','paused'].includes(c.stage)?(c.prevStage||'created'):c.stage,i=ORDER.indexOf(eff),it=c.intake||{},ai=byNew(D.ai)[0];
  const chips=ORDER.map((s,k)=>`<span class="chip ${s===eff?'on':k<i?'past':''}">${ST[s]}</span>`).join('');
  const bad=D.equipment.filter(q=>['defect','repair','inrepair'].includes(q.state)).map(q=>q.name).join(', ');
  return`<div class="stages">${chips}${['parts','paused','cancelled'].includes(c.stage)?`<span class="chip on">${ST[c.stage]}</span>`:''}</div>
- <div class="progress"><div class="progress-fill" style="width:${pct}%"></div></div><div class="meta">Выполнено задач: ${done} из ${T.length} (${pct}%) · обновлено ${fmt(c.updatedAt)}</div>
- ${kv('Причина обращения',c.reason)}${kv('Поступил',fmt(c.createdAt))}${kv('Пробег при поступлении',it.mileage?it.mileage+' км':'')}
+ <div class="progress"><div class="progress-fill" style="width:${pct}%"></div></div><div class="meta">Выполнено задач: ${done} из ${T.length} (${pct}%) · обновлено ${fmt(c.updatedAt)}</div>${kv('Причина обращения',c.reason)}${kv('Поступил',fmt(c.createdAt))}${kv('Пробег при поступлении',it.mileage?it.mileage+' км':'')}
  ${kv('Заявлено заказчиком (не подтверждено)',[it.description,it.symptoms,it.known].filter(Boolean).join(' · '))}${kv('Узлы, отмеченные заказчиком',it.nodes)}${kv('Узлы с подтверждённой неисправностью',bad)}${kv('Результат осмотра депо',c.inspectionResult)}${kv('Подтверждённая неисправность',c.confirmedFaults)}${kv('Ожидаемая дата завершения',c.eta)}${kv('Задержка',c.delayReason)}${c.pauseReason?kv('Причина приостановки',c.pauseReason):''}${c.cancelReason?kv('Причина отмены',c.cancelReason):''}${c.conclusion?kv('Итоговое заключение',c.conclusion):''}
  <h3 class="sec">Задачи</h3>${T.map(t=>`<div class="kanban-item"><div class="row"><div>${esc(t.title)}${t.source==='ai'?' <span class="badge progress">из ИИ-анализа</span>':''}</div>${t.status==='done'?'<span class="badge done">выполнено</span>':dep?`<button data-a="tdone" data-id="${t.id}">Выполнено</button>`:'<span class="badge waiting">ожидает</span>'}</div></div>`).join('')||'<div class="nd">Задач нет</div>'}
- <h3 class="sec">История стадий</h3>${byNew(D.hist).map(h=>`<div class="kv">${fmt(h.ts)} ·${ST[h.from]||'—'} → <b style="color:var(--text)">${ST[h.to]}</b> · ${esc(h.by)}${h.comment?'· «'+esc(h.comment)+'»':''}</div>`).join('')||'<div class="nd">Нет данных</div>'}
- ${dep?`<h3 class="sec">Действия депо</h3><div class="actions">${nexts(c).map(s=>`<button class="primary" data-a="move" data-to="${s}">→ ${ST[s]}</button>`).join('')}${c.stage==='plan'&&!c.planApproved?'<button data-a="approve">Утвердить план</button>':''}${!['issued','cancelled','paused'].includes(c.stage)?'<button data-a="pause">Приостановить</button><button class="danger" data-a="cancel">Отменить</button>':''}</div>
+ <h3 class="sec">История стадий</h3>${byNew(D.hist).map(h=>`<div class="kv">${fmt(h.ts)} · ${ST[h.from]||'—'} → <b style="color:var(--text)">${ST[h.to]}</b> · ${esc(h.by)} ${h.comment?'· «'+esc(h.comment)+'»':''}</div>`).join('')||'<div class="nd">Нет данных</div>'}
+ ${dep?`<h3 class="sec">Действия депо</h3><div class="actions">${nexts(c).map(s=>`<button class="primary" data-a="move" data-to="${s}">→ ${ST[s]}</button>`).join('')}${c.stage==='plan'&&!c.planApproved?'<button data-a="approve">Утвердить план</button>':''}${!['issued','cancelled','paused'].includes(c.stage)?`<button data-a="pause">Приостановить</button><button class="danger" data-a="cancel">Отменить</button>':''}</div>
  <div class="actions"><button data-a="task">+ Задача</button><button data-a="field" data-f="inspectionResult" data-l="Результат осмотра">Результат осмотра</button><button data-a="field" data-f="confirmedFaults" data-l="Подтверждённая неисправность">Подтв. неисправность</button><button data-a="field" data-f="eta" data-l="Ожидаемая дата завершения">Срок</button><button data-a="field" data-f="delayReason" data-l="Причина задержки">Задержка</button></div>
  <h3 class="sec">Анализ ИИ</h3><div class="actions"><button class="primary" data-a="ai">Анализировать локомотив</button></div>${ai?aiBlock(ai):'<div class="nd">Анализов нет</div>'}`:''}`}
 function aiBlock(a){const r=a.result||{},L=x=>(x||[]).map(v=>`<li>${esc(txt(v))}</li>`).join('');
