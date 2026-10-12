@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>LOCO PREDICT — NewRail</title>
+<title>NewRail</title>
 <style>
 :root{--kz8-blue:#1e5b9e;--kz8-blue-bright:#2a7fd4;--kz8-blue-dark:#143c6b;--kz8-cyan:#5bc8e8;--kz8-cyan-dim:#3a9fbf;--kz8-yellow:#f5c518;--kz8-yellow-dim:#c9a010;--kz8-black:#0a0d12;--kz8-dark:#0d1520;--kz8-panel:#1a2332;--bg:var(--kz8-dark);--panel:var(--kz8-panel);--panel-2:#202b3d;--border:#2a3a52;--border-2:#3a4553;--text:#e8eef5;--text-dim:#8a9bb0;--accent:var(--kz8-blue-bright);--success:#27ae60;--danger:#e74c3c}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -15,7 +15,7 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 main{flex:1}
 .train-nav{position:relative;display:flex;align-items:flex-end;gap:0;padding:14px 0 16px;border-bottom:1px solid var(--border);margin-bottom:24px;overflow-x:auto}
-.train-nav .wagon{position:relative;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;height:46px;padding:0 22px;padding-bottom:22px;margin-right:-8px;color:var(--kz8-black);background:linear-gradient(180deg,#f0f4f8 0%,#e2e8ef 46%,var(--kz8-yellow) 46%,var(--kz8-yellow) 54%,#2a7fd4 54%,#1e5b9e 76%,#143c6b 100%);border:1px solid #0b2038;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;text-decoration:none;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 50%,calc(100% - 10px) 100%,0 100%);transition:all .25s ease;cursor:pointer;z-index:1;line-height:1}
+.train-nav .wagon{position:relative;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;height:46px;padding:0 22px;padding-bottom:22px;margin-right:-8px;color:var(--kz8-black);background:linear-gradient(180deg,#f0f4f8 0%,#e2e8ef 46%,var(--kz8-yellow) 46%,var(--kz8-yellow) 54%,#2a7fd4 54%,#1e5b9e 76%,#143c6b 100%);border:1px solid #0b2038;font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;text-decoration:none;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 50%,calc(100% - 10px) 100%,0 100%);transition:all .25s ease;cursor:pointer;z-index:1;line-height:1}
 .train-nav .wagon:hover{filter:brightness(1.15);transform:translateY(-2px);z-index:3}
 .train-nav .wagon.active{filter:brightness(1.2) drop-shadow(0 0 12px rgba(245,197,24,.7));z-index:4;color:#0a1626;background:linear-gradient(180deg,var(--kz8-yellow) 0%,var(--kz8-yellow-dim) 100%)}
 .train-head{position:relative;flex-shrink:0;width:120px;height:46px;margin-left:6px;clip-path:polygon(0% 20%,14% 4%,58% 4%,82% 8%,96% 32%,100% 55%,100% 100%,0% 100%);background:linear-gradient(180deg,#f0f4f8 0%,#e2e8ef 46%,var(--kz8-yellow) 46%,var(--kz8-yellow) 54%,var(--kz8-cyan) 54%,var(--kz8-cyan-dim) 68%,var(--kz8-blue) 68%,var(--kz8-blue-dark) 100%);filter:drop-shadow(0 3px 6px rgba(0,0,0,.55));z-index:2}
@@ -58,6 +58,8 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--kz8-blue
 .modal-content{background:var(--panel);border:1px solid var(--border-2);border-radius:12px;padding:24px;max-width:480px;width:100%}
 .modal-content h2{margin-bottom:16px;color:var(--kz8-blue-bright)}
 .toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);max-width:calc(100vw - 24px);padding:10px 18px;background:rgba(13,21,32,.95);border:1px solid var(--kz8-cyan);border-left:4px solid var(--kz8-yellow);border-radius:8px;color:var(--text);font-size:13px;z-index:2000;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+.toast.error{border-color:var(--danger);border-left-color:var(--danger)}
+.toast.success{border-color:var(--success);border-left-color:var(--success)}
 .qr-box{display:inline-block;padding:12px;background:#fff;border-radius:12px;border:3px solid var(--kz8-yellow)}
 .qr-wrap{text-align:center}
 .qr-wrap .code{margin-top:12px;font-size:22px;font-weight:700;letter-spacing:3px;color:var(--kz8-yellow)}
@@ -167,12 +169,14 @@ const COL = "tasks";
 const $ = id => document.getElementById(id);
 
 const toggleModal = (id, state) => { const m = $(id); if (m) m.classList.toggle('open', state); };
+
 function showToast(text, type = '') {
   const t = document.createElement('div');
   t.className = 'toast ' + type; t.textContent = text;
   document.body.appendChild(t);
   setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 2600);
 }
+
 let actx = null;
 function beep(freq, dur, type, vol) {
   try {
@@ -184,15 +188,19 @@ function beep(freq, dur, type, vol) {
     o.stop(actx.currentTime + dur);
   } catch (e) {}
 }
+
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
+// Оригинальная логика входа с обработкой ошибок
 $('devSubmit').onclick = () => {
+  if (firebaseConfig.apiKey === "YOUR_API_KEY") { showToast('Вставь свой firebaseConfig в index.html', 'error'); return; }
   const login = $('devLogin').value.trim().toLowerCase();
   const email = login ? (login.includes('@') ? login : login + '@corequiz.local') : 'core.singl@corequiz.local';
   signInWithEmailAndPassword(auth, email, $('devPass').value.trim())
     .then(() => { beep(880, .15); showToast('Вход выполнен', 'success'); })
-    .catch(err => { beep(200, .3, 'square'); showToast('Ошибка: ' + err.message, 'error'); });
+    .catch(err => { beep(200, .3, 'square'); showToast('Ошибка: ' + (err.code || err.message), 'error'); console.error(err); });
 };
+
 $('devLogout').onclick = () => signOut(auth).then(() => showToast('Вы вышли'));
 
 let unsub = null, items = [];
@@ -214,7 +222,6 @@ const LABEL = { start: 'В работу', done: 'Готово' };
 
 function render() {
   const container = $('main-content-view');
-  // Проверяем какая вкладка активна
   const activeWagon = document.querySelector('.train-nav .wagon.active');
   const view = activeWagon ? activeWagon.getAttribute('data-view') : 'tasks';
 
@@ -235,11 +242,11 @@ function render() {
       <div class="card">
         <h2>График ТО (ТО-1 — ТО-8)</h2>
         <div class="subtitle">Регламент обслуживания тягового подвижного состава</div>
-        <table>
-          <tr><th>Вид ТО</th><th>Наименование</th><th>Интервал</th><th>Статус</th></tr>
-          <tr><td>ТО-1</td><td>Ежесменный осмотр</td><td>1 000 км</td><td><span style="color:var(--success)">По плану</span></td></tr>
-          <tr><td>ТО-2</td><td>ТО при отстое</td><td>5 000 км</td><td><span style="color:var(--success)">По плану</span></td></tr>
-          <tr><td>ТО-3</td><td>Периодическое ТО</td><td>25 000 км</td><td><span style="color:var(--kz8-yellow)">Скоро</span></td></tr>
+        <table style="width:100%;text-align:left;border-collapse:collapse;margin-top:10px">
+          <tr style="border-bottom:1px solid var(--border)"><th>Вид ТО</th><th>Наименование</th><th>Интервал</th><th>Статус</th></tr>
+          <tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 0">ТО-1</td><td>Ежесменный осмотр</td><td>1 000 км</td><td><span style="color:var(--success)">По плану</span></td></tr>
+          <tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 0">ТО-2</td><td>ТО при отстое</td><td>5 000 км</td><td><span style="color:var(--success)">По плану</span></td></tr>
+          <tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 0">ТО-3</td><td>Периодическое ТО</td><td>25 000 км</td><td><span style="color:var(--kz8-yellow)">Скоро</span></td></tr>
         </table>
       </div>`;
     return;
@@ -305,4 +312,54 @@ function render() {
             ${NEXT[s] ? `<button data-action="${NEXT[s]}" data-id="${i.id}">${LABEL[NEXT[s]]}</button>` : ''}
             <button data-action="remove" data-id="${i.id}">Удалить</button>
           </div>
-        </div>`).
+        </div>`).join('') : '<div class="empty">Пусто</div>';
+    }
+  }
+  if ($('cWaiting'))$('cWaiting').textContent = items.filter(i => i.status === 'waiting').length;
+  if ($('cProgress'))$('cProgress').textContent = items.filter(i => i.status === 'progress').length;
+  if ($('cDone'))$('cDone').textContent = items.filter(i => i.status === 'done').length;
+
+  $('search').oninput = render;
+  $('filter').onchange = render;
+  $('addBtn').onclick = () => toggleModal('addModal', true);
+}
+
+document.querySelectorAll('.train-nav .wagon[data-view]').forEach(btn => {
+  btn.onclick = (e) => {
+    document.querySelectorAll('.train-nav .wagon').forEach(w => w.classList.remove('active'));
+    e.target.classList.add('active');
+    render();
+  };
+});
+
+document.addEventListener('click', async e => {
+  const b = e.target.closest('button[data-action]');
+  if (!b) return;
+  const ref = doc(db, COL, b.dataset.id);
+  try {
+    if (b.dataset.action === 'start') await updateDoc(ref, { status: 'progress' });
+    if (b.dataset.action === 'done') { await updateDoc(ref, { status: 'done' }); beep(660, .15); }
+    if (b.dataset.action === 'remove') await deleteDoc(ref);
+  } catch (err) { showToast('Ошибка: ' + err.message, 'error'); }
+});
+
+$('addCancel').onclick = () => toggleModal('addModal', false);$('addForm').onsubmit = async e => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  try {
+    await addDoc(collection(db, COL), { title: fd.get('title').trim(), meta: fd.get('meta').trim(), status: 'waiting', createdAt: Date.now() });
+    e.target.reset(); toggleModal('addModal', false); showToast('Добавлено', 'success');
+  } catch (err) { showToast('Ошибка: ' + err.message, 'error'); }
+};
+
+$('qrBtn').onclick = () => {
+  const code = 'SESSION_123';
+  $('qr').innerHTML = '';
+  new QRCode($('qr'), { text: location.origin + location.pathname + '#/join/' + code, width: 150, height: 150, colorDark: "#0a1c2e", colorLight: "#ffffff" });
+  $('qrCode').textContent = code;
+  toggleModal('qrModal', true);
+};
+$('qrClose').onclick = () => toggleModal('qrModal', false);
+</script>
+</body>
+</html>
