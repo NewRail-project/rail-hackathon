@@ -1,10 +1,12 @@
 // =====================================================
-// js/script.js — Полный скрипт интерфейса и управления
+// js/script.js — Управление интерфейсом, кнопками и событиями
 // =====================================================
 
 import { listenRecords } from "./data.js";
+import { db } from "./app.js";
+import { ref, push } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
-// ---------- TOAST ----------
+// ---------- TOAST УВЕДОМЛЕНИЯ ----------
 export function showToast(text, type = "info") {
   let container = document.getElementById("toast-container");
   if (!container) {
@@ -36,7 +38,7 @@ export function showToast(text, type = "info") {
   }, 2600);
 }
 
-// ---------- BEEP ----------
+// ---------- ЗВУКОВОЙ СИГНАЛ (BEEP) ----------
 let actx = null;
 export function beep(freq = 880, dur = 0.2, type = "sine", vol = 0.15) {
   try {
@@ -52,16 +54,35 @@ export function beep(freq = 880, dur = 0.2, type = "sine", vol = 0.15) {
   } catch (e) {}
 }
 
-// ---------- MODAL ----------
+// ---------- УПРАВЛЕНИЕ МОДАЛЬНЫМИ ОКНАМИ ----------
 export function toggleModal(id, state) {
   const m = document.getElementById(id);
   if (m) m.classList.toggle("open", !!state);
 }
 
 // =====================================================
-// Инициализация интерфейса и панели управления
+// Инициализация интерактивных элементов и кнопок
 // =====================================================
 document.addEventListener("DOMContentLoaded", () => {
+  // 1. Обработка кликов по навигационным кнопкам и вкладкам
+  const navItems = document.querySelectorAll(".nav-item, .train-nav button");
+  navItems.forEach(item => {
+    item.addEventListener("click", (e) => {
+      navItems.forEach(n => n.classList.remove("active"));
+      e.target.classList.add("active");
+    });
+  });
+
+  // 2. Глобальные обработчики для кнопок быстрого действия
+  const globalActionsBtn = document.getElementById("global-action-btn");
+  if (globalActionsBtn) {
+    globalActionsBtn.addEventListener("click", () => {
+      showToast("Действие выполняется...", "info");
+      beep(600, 0.1);
+    });
+  }
+
+  // 3. Рендеринг дашборда на главной странице
   const path = window.location.pathname;
   const isHudPage =
     path === "/" ||
