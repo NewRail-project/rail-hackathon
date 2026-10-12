@@ -15,7 +15,7 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 main{flex:1}
 .train-nav{position:relative;display:flex;align-items:flex-end;gap:0;padding:14px 0 16px;border-bottom:1px solid var(--border);margin-bottom:24px;overflow-x:auto}
-.train-nav .wagon{position:relative;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;height:46px;padding:0 22px;padding-bottom:22px;margin-right:-8px;color:var(--kz8-black);background:linear-gradient(180deg,#f0f4f8 0%,#e2e8ef 46%,var(--kz8-yellow) 46%,var(--kz8-yellow) 54%,#2a7fd4 54%,#1e5b9e 76%,#143c6b 100%);border:1px solid #0b2038;font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;text-decoration:none;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 50%,calc(100% - 10px) 100%,0 100%);transition:all .25s ease;cursor:pointer;z-index:1;line-height:1}
+.train-nav .wagon{position:relative;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;height:46px;padding:0 22px;padding-bottom:22px;margin-right:-8px;color:var(--kz8-black);background:linear-gradient(180deg,#f0f4f8 0%,#e2e8ef 46%,var(--kz8-yellow) 46%,var(--kz8-yellow) 54%,var(--kz8-blue-bright) 54%,var(--kz8-blue) 76%,var(--kz8-blue-dark) 100%);border:1px solid #0b2038;font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;text-decoration:none;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 50%,calc(100% - 10px) 100%,0 100%);transition:all .25s ease;cursor:pointer;z-index:1;line-height:1}
 .train-nav .wagon:hover{filter:brightness(1.15);transform:translateY(-2px);z-index:3}
 .train-nav .wagon.active{filter:brightness(1.2) drop-shadow(0 0 12px rgba(245,197,24,.7));z-index:4;color:#0a1626;background:linear-gradient(180deg,var(--kz8-yellow) 0%,var(--kz8-yellow-dim) 100%)}
 .train-head{position:relative;flex-shrink:0;width:120px;height:46px;margin-left:6px;clip-path:polygon(0% 20%,14% 4%,58% 4%,82% 8%,96% 32%,100% 55%,100% 100%,0% 100%);background:linear-gradient(180deg,#f0f4f8 0%,#e2e8ef 46%,var(--kz8-yellow) 46%,var(--kz8-yellow) 54%,var(--kz8-cyan) 54%,var(--kz8-cyan-dim) 68%,var(--kz8-blue) 68%,var(--kz8-blue-dark) 100%);filter:drop-shadow(0 3px 6px rgba(0,0,0,.55));z-index:2}
@@ -87,7 +87,6 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--kz8-blue
 
   <!-- ПРИЛОЖЕНИЕ -->
   <main id="appView" style="display:none">
-    <!-- Навигация в виде состава -->
     <nav class="train-nav">
       <a class="wagon active" data-view="tasks">Задачи</a>
       <a class="wagon" data-view="passport" id="passportNavBtn">Паспорт</a>
@@ -98,7 +97,6 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--kz8-blue
       <div class="train-head"></div>
     </nav>
 
-    <!-- Динамический контейнер контента -->
     <div id="main-content-view">
       <div class="grid grid-3" style="margin-bottom:16px">
         <div class="stat"><div class="label">Ожидают</div><div class="value red" id="cWaiting">0</div></div>
@@ -174,7 +172,7 @@ function showToast(text, type = '') {
   const t = document.createElement('div');
   t.className = 'toast ' + type; t.textContent = text;
   document.body.appendChild(t);
-  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 2600);
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3500);
 }
 
 let actx = null;
@@ -191,14 +189,18 @@ function beep(freq, dur, type, vol) {
 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
-// Оригинальная логика входа с обработкой ошибок
 $('devSubmit').onclick = () => {
-  if (firebaseConfig.apiKey === "YOUR_API_KEY") { showToast('Вставь свой firebaseConfig в index.html', 'error'); return; }
   const login = $('devLogin').value.trim().toLowerCase();
+  const pass = $('devPass').value.trim();
   const email = login ? (login.includes('@') ? login : login + '@corequiz.local') : 'core.singl@corequiz.local';
-  signInWithEmailAndPassword(auth, email, $('devPass').value.trim())
+  
+  signInWithEmailAndPassword(auth, email, pass)
     .then(() => { beep(880, .15); showToast('Вход выполнен', 'success'); })
-    .catch(err => { beep(200, .3, 'square'); showToast('Ошибка: ' + (err.code || err.message), 'error'); console.error(err); });
+    .catch(err => { 
+      beep(200, .3, 'square'); 
+      showToast('Ошибка входа: ' + err.code, 'error'); 
+      console.error("Firebase Auth Error:", err); 
+    });
 };
 
 $('devLogout').onclick = () => signOut(auth).then(() => showToast('Вы вышли'));
@@ -265,13 +267,12 @@ function render() {
       <div class="card">
         <h2>Личный кабинет депо и файлы</h2>
         <div class="subtitle">Загрузка актов осмотра и диагностических отчетов</div>
-        <input type="file" style="margin-bottom:15px">
+        <input type="file" style="margin-top:10px;margin-bottom:15px">
         <button class="primary">Загрузить документ</button>
       </div>`;
     return;
   }
 
-  // Отрендерить задачи (tasks)
   container.innerHTML = `
     <div class="grid grid-3" style="margin-bottom:16px">
       <div class="stat"><div class="label">Ожидают</div><div class="value red" id="cWaiting">0</div></div>
