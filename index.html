@@ -1,22 +1,223 @@
 <!DOCTYPE html>
-<html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>LOCO PREDICT</title>
-<link rel="stylesheet" href="css/style.css"><link rel="stylesheet" href="css/newrail-adapter.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<style>
-.stages{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}.chip{font-size:11px;padding:4px 9px;border-radius:14px;border:1px solid var(--border-2);color:var(--text-dim)}
-.chip.on{background:var(--kz8-yellow);color:#0a1626;border-color:var(--kz8-yellow);font-weight:700}.chip.past{color:var(--success);border-color:var(--success)}
-h3.sec{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin:18px 0 8px}
-.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}.kv{font-size:13px;margin:4px 0}.kv b{color:var(--text-dim);font-weight:500}
-select.inl{width:auto;padding:6px 8px;font-size:12px}.nd{color:var(--text-dim)}.warn{color:var(--kz8-yellow);font-size:12px}
-</style></head><body><div class="hud-wrapper">
-<header class="brand-header"><h1>LOCO PREDICT</h1><div class="row" style="gap:8px">
-<span class="live" id="live">…</span>
-<select id="role" class="inl"><option value="cust">Заказчик</option><option value="depot">Депо</option></select>
-<input id="org" placeholder="Моя организация" style="width:150px;padding:6px 10px">
-<button id="aiKey" style="padding:8px 12px">ИИ-ключ</button></div></header>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>LOCO PREDICT</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/newrail-adapter.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        /* ---------- БАЗОВЫЕ ПЕРЕМЕННЫЕ И СОВРЕМЕННАЯ ТЕМА ---------- */
+        :root {
+            --bg: #0b0f19;
+            --panel: #131a2a;
+            --card-bg: #1a2332;
+            --border: #2a3a52;
+            --border-2: #3a4b66;
+            --text: #e2e8f0;
+            --text-dim: #94a3b8;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --success: #10b981;
+            --danger: #ef4444;
+            --kz8-yellow: #f59e0b;
+            --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: var(--font-main);
+            margin: 0;
+            padding: 0;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ---------- ФОРМЫ, КНОПКИ И КАСТОМНЫЕ SELECT ---------- */
+        input, textarea {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 10px 14px;
+            font-size: 14px;
+            border-radius: 8px;
+            width: 100%;
+            box-sizing: border-box;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            font-family: var(--font-main);
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        /* Сохраняем кастомный вид селектов, убираем стиль Chrome */
+        select {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-color: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 10px 36px 10px 14px;
+            font-size: 14px;
+            border-radius: 8px;
+            width: 100%;
+            box-sizing: border-box;
+            font-family: var(--font-main);
+            cursor: pointer;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 16px;
+            transition: border-color 0.2s;
+        }
+
+        button {
+            background: var(--card-bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: var(--font-main);
+        }
+
+        button:hover {
+            background: var(--border);
+        }
+
+        button.primary {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+        }
+
+        button.primary:hover {
+            background: var(--primary-hover);
+        }
+
+        /* ---------- КАРТОЧКИ И КОНТЕЙНЕРЫ ---------- */
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .kanban-item {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 12px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .kanban-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+            border-color: var(--border-2);
+        }
+
+        /* ---------- СТАТУСЫ, ЧИПЫ И ТЕКСТ ---------- */
+        .stages { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
+        .chip { font-size: 12px; padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border-2); color: var(--text-dim); background: var(--bg); transition: all 0.3s; }
+        .chip.on { background: rgba(245, 158, 11, 0.1); color: var(--kz8-yellow); border-color: var(--kz8-yellow); font-weight: 600; box-shadow: 0 0 10px rgba(245, 158, 11, 0.1); }
+        .chip.past { color: var(--success); border-color: var(--success); background: rgba(16, 185, 129, 0.05); }
+        
+        .badge { font-size: 11px; padding: 3px 8px; border-radius: 6px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .badge.progress { background: rgba(59, 130, 246, 0.15); color: var(--primary); }
+        .badge.done { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+        .badge.waiting { background: rgba(148, 163, 184, 0.15); color: var(--text-dim); }
+
+        h2 { font-size: 20px; margin: 0 0 16px 0; font-weight: 600; color: #fff; }
+        h3.sec { font-size: 12px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text-dim); margin: 24px 0 12px; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+        
+        .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+        .kv { font-size: 14px; margin: 8px 0; padding: 8px 12px; background: rgba(255,255,255,0.02); border-radius: 6px; border-left: 3px solid var(--border-2); }
+        .kv b { color: var(--text-dim); font-weight: 500; display: inline-block; min-width: 140px; }
+        
+        select.inl { width: auto; padding: 6px 30px 6px 12px; font-size: 13px; background-color: var(--card-bg); border-color: var(--border-2); }
+        .nd { color: var(--text-dim); font-style: italic; font-size: 13px; }
+        .warn { color: var(--kz8-yellow); font-size: 13px; padding: 10px; background: rgba(245, 158, 11, 0.1); border-radius: 6px; border: 1px solid rgba(245, 158, 11, 0.2); }
+        .meta { color: var(--text-dim); font-size: 12px; margin-top: 6px; }
+        .empty { text-align: center; padding: 40px 20px; color: var(--text-dim); background: var(--panel); border: 1px dashed var(--border); border-radius: 12px; }
+
+        .grid { display: grid; gap: 16px; }
+        .grid-2 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+        .field { display: flex; flex-direction: column; gap: 6px; }
+        .field label { font-size: 13px; color: var(--text-dim); font-weight: 500; }
+
+        .progress { height: 6px; background: var(--bg); border-radius: 3px; overflow: hidden; margin: 16px 0 8px; border: 1px solid var(--border); }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary), #60a5fa); border-radius: 3px; transition: width 0.5s ease-out; }
+
+        /* ---------- ЖЕЛЕЗНОДОРОЖНЫЙ СВЕТОФОР ПЕРЕЕЗДА И ПАНЕЛЬ ---------- */
+        .brand-header { position: relative; min-height: 90px; padding: 20px 30px; border-bottom: 1px solid var(--border); background: var(--panel); display: flex; align-items: center; }
+        .brand-header h1 { margin: 0; font-size: 24px; font-weight: 800; letter-spacing: 1px; color: #fff; text-shadow: 0 0 20px rgba(59, 130, 246, 0.4); }
+        .live { color: var(--success); font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .rail-semaphore-panel { position: absolute; top: 15px; right: 30px; display: flex; flex-direction: column; align-items: center; z-index: 50; pointer-events: auto; }
+        .semaphore-heads { display: flex; gap: 16px; margin-bottom: 2px; }
+        .semaphore-lamp-wrap { position: relative; width: 32px; height: 32px; background: #0a0d12; border-radius: 50%; border: 2px solid #2a3a52; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 2px 5px rgba(0,0,0,0.8), 0 4px 10px rgba(0,0,0,0.5); }
+        .semaphore-lamp-wrap::before { content: ''; position: absolute; top: -5px; left: -4px; right: -4px; height: 12px; background: linear-gradient(180deg, #1a2332, #0d1520); border: 1px solid var(--border-2); border-radius: 10px 10px 3px 3px; z-index: 2; }
+        .semaphore-bulb { width: 18px; height: 18px; background: #1e293b; border-radius: 50%; box-shadow: inset 0 2px 4px rgba(0,0,0,0.9); }
+        
+        @keyframes blinkLeft { 0%, 49% { background: #e74c3c; box-shadow: 0 0 14px #e74c3c, inset 0 1px 3px rgba(255,255,255,0.5); } 50%, 100% { background: #5a1813; box-shadow: none; } }
+        @keyframes blinkRight { 0%, 49% { background: #5a1813; box-shadow: none; } 50%, 100% { background: #e74c3c; box-shadow: 0 0 14px #e74c3c, inset 0 1px 3px rgba(255,255,255,0.5); } }
+        .semaphore-lamp-wrap.left-signal .semaphore-bulb { animation: blinkLeft 1s infinite; }
+        .semaphore-lamp-wrap.right-signal .semaphore-bulb { animation: blinkRight 1s infinite; }
+        .semaphore-pole { width: 6px; background: linear-gradient(90deg, #3a4553, #6b7a90, #2a3a52); border-radius: 3px; position: relative; box-shadow: 2px 0 8px rgba(0,0,0,0.5); height: 75px; }
+        .semaphore-signboard { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: rgba(19, 26, 42, 0.85); backdrop-filter: blur(10px); border: 1px solid var(--border-2); border-radius: 8px; padding: 6px 10px; display: flex; gap: 8px; align-items: center; box-shadow: 0 8px 25px rgba(0,0,0,0.6); white-space: nowrap; }
+        .semaphore-signboard select, .semaphore-signboard input { padding: 6px 30px 6px 10px; font-size: 13px; border-radius: 6px; width: auto; background-color: var(--card-bg); border-color: var(--border-2); }
+        .semaphore-signboard input { padding: 6px 10px; }
+
+        /* ---------- НАВИГАЦИЯ И ОСНОВНОЙ КОНТЕЙНЕР ---------- */
+        .train-nav { display: flex; gap: 20px; padding: 15px 30px; background: var(--bg); border-bottom: 1px solid var(--border); }
+        .train-nav a { color: var(--text-dim); text-decoration: none; font-size: 14px; font-weight: 600; cursor: pointer; transition: color 0.2s; }
+        .train-nav a:hover, .train-nav a.active { color: var(--primary); }
+        
+        main#view { max-width: 1000px; margin: 30px auto; padding: 0 20px; }
+        .toolbar { display: flex; gap: 12px; margin-bottom: 20px; }
+        .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+
+        /* Всплывающие уведомления */
+        .toast { position: fixed; bottom: 20px; right: 20px; background: var(--panel); border: 1px solid var(--border-2); color: #fff; padding: 12px 20px; border-radius: 8px; font-size: 14px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 1000; transition: opacity 0.3s; }
+        .toast.success { border-left: 4px solid var(--success); }
+        .toast.error { border-left: 4px solid var(--danger); }
+    </style>
+</head>
+<body>
+<div class="bg-rails-animation"></div>
+<div class="hud-wrapper">
+<header class="brand-header">
+  <h1>LOCO PREDICT</h1>
+  <span class="live" id="live" style="position:absolute;left:230px;top:28px;">…</span>
+  <div class="rail-semaphore-panel">
+    <div class="semaphore-heads">
+      <div class="semaphore-lamp-wrap left-signal"><div class="semaphore-bulb"></div></div>
+      <div class="semaphore-lamp-wrap right-signal"><div class="semaphore-bulb"></div></div>
+    </div>
+    <div class="semaphore-pole">
+      <div class="semaphore-signboard">
+        <select id="role" class="inl"><option value="cust">Заказчик</option><option value="depot">Депо</option></select>
+        <input id="org" placeholder="Моя организация" style="width:140px">
+      </div>
+    </div>
+  </div>
+</header>
 <nav class="train-nav"><a class="wagon active" data-a="home">Локомотивы</a><div class="train-head"></div></nav>
-<main id="view"></main></div>
+<main id="view"></main>
+</div>
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
 import {getFirestore,collection,addDoc,updateDoc,doc,onSnapshot,query,where,arrayUnion} from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
@@ -56,12 +257,12 @@ function list(){
  else h+=ls.length?ls.map(l=>`<div class="kanban-item"><div class="row"><div class="id">${esc(l.number)} · ${esc(l.series)}</div>${status(l)}</div><div class="meta">${esc(l.org)} · ${Number(l.mileage||0).toLocaleString('ru-RU')} км</div><div class="actions"><button data-a="open" data-id="${l.id}">Паспорт</button></div></div>`).join(''):'<div class="empty">Локомотивов пока нет</div>';
  return h}
 
-const FORM=[['Локомотив',[['number','Номер*'],['series','Серия и модель*'],['type','Тип',['','Электровоз','Тепловоз','Маневровый']],['factoryNo','Заводской номер'],['year','Год выпуска','number'],['depot','Депо приписки'],['mileage','Текущий пробег, км*','number'],['mileageDate','Дата подтверждения пробега','date'],['lastTO','Дата последнего ТО','date'],['lastTOType','Вид последнего ТО',['',...TO]],['prevRepair','Предыдущий ремонт']]],
-['Заказчик',[['org','Организация*'],['rep','ФИО представителя*'],['position','Должность'],['phone','Телефон','tel'],['email','E-mail','email']]],
-['Причина поступления',[['reason','Причина*',['','Плановое ТО','Обнаруженная неисправность','Внеплановый ремонт','Диагностическая проверка','Повторное обращение','Другая']],['description','Описание проблемы','area'],['symptoms','Симптомы','area'],['found','Когда обнаружена'],['conditions','При каких условиях проявляется'],['nodes','Предположительно затронутые узлы'],['prechecks','Проведённые проверки'],['notes','Дополнительные замечания']]],
-['Состояние при сдаче',[['external','Внешнее состояние','area'],['known','Известные неисправности','area'],['complete','Комплектность'],['handover','Замечания при передаче']]]];
 function openForm(){S.v='form';const dep=isDepot();
- $('view').innerHTML='<form id="intake" class="card" novalidate><h2>Сдать локомотив в ремонт</h2><div class="subtitle">Неизвестные данные оставьте пустыми — они не будут заменены выдуманными</div>'+FORM.map(([t,fs])=>`<h3 class="sec">${t}</h3><div class="grid grid-2">`+fs.map(([n,l,k])=>`<div class="field"><label>${l}</label>`+(Array.isArray(k)?`<select name="${n}">${k.map(o=>`<option>${o}</option>`).join('')}</select>`:k==='area'?`<textarea name="${n}" rows="2"></textarea>`:`<input name="${n}" type="${k||'text'}" ${n==='org'&&!dep?`value="${esc(myOrg())}"`:''}>`)+'</div>').join('')+'</div>').join('')+'<div class="row" style="justify-content:flex-start"><button class="primary">Зарегистрировать</button><button type="button" data-a="home">Отмена</button></div></form>';
+ const FORM=[['Локомотив',[['number','Номер*'],['series','Серия и модель*'],['type','Тип',['','Электровоз','Тепловоз','Маневровый']],['factoryNo','Заводской номер'],['year','Год выпуска','number'],['depot','Депо приписки'],['mileage','Текущий пробег, км*','number'],['mileageDate','Дата подтверждения пробега','date'],['lastTO','Дата последнего ТО','date'],['lastTOType','Вид последнего ТО',['',...TO]],['prevRepair','Предыдущий ремонт']]],
+ ['Заказчик',[['org','Организация*'],['rep','ФИО представителя*'],['position','Должность'],['phone','Телефон','tel'],['email','E-mail','email']]],
+ ['Причина поступления',[['reason','Причина*',['','Плановое ТО','Обнаруженная неисправность','Внеплановый ремонт','Диагностическая проверка','Повторное обращение','Другая']],['description','Описание проблемы','area'],['symptoms','Симптомы','area'],['found','Когда обнаружена'],['conditions','При каких условиях проявляется'],['nodes','Предположительно затронутые узлы'],['prechecks','Проведённые проверки'],['notes','Дополнительные замечания']]],
+ ['Состояние при сдаче',[['external','Внешнее состояние','area'],['known','Известные неисправности','area'],['complete','Комплектность'],['handover','Замечания при передаче']]]];
+ $('view').innerHTML='<form id="intake" class="card" novalidate><h2>Сдать локомотив в ремонт</h2><div class="subtitle meta">Неизвестные данные оставьте пустыми — они не будут заменены выдуманными</div>'+FORM.map(([t,fs])=>`<h3 class="sec">${t}</h3><div class="grid grid-2">`+fs.map(([n,l,k])=>`<div class="field"><label>${l}</label>`+(Array.isArray(k)?`<select name="${n}">${k.map(o=>`<option>${o}</option>`).join('')}</select>`:k==='area'?`<textarea name="${n}" rows="2"></textarea>`:`<input name="${n}" type="${k||'text'}" ${n==='org'&&!dep?`value="${esc(myOrg())}"`:''}>`)+'</div>').join('')+'</div>').join('')+'<div class="row" style="justify-content:flex-start; margin-top:20px;"><button class="primary">Зарегистрировать</button><button type="button" data-a="home">Отмена</button></div></form>';
  $('intake').onsubmit=submitIntake}
 async function submitIntake(e){e.preventDefault();const f=Object.fromEntries(new FormData(e.target));
  const miss=['number','series','mileage','org','rep','reason'].filter(k=>!String(f[k]||'').trim());
@@ -89,11 +290,11 @@ function passport(){
  return`<div class="row"><button data-a="home">← К списку</button><span>${status(l)}</span></div>
  <div class="card"><h2>Цифровой паспорт ${esc(l.number)}</h2><div class="row" style="align-items:flex-start"><div>${kv('Серия и модель',l.series)}${kv('Тип',l.type)}${kv('Заводской номер',l.factoryNo)}${kv('Год выпуска',l.year)}${kv('Организация-владелец',l.org)}${kv('Депо приписки',l.depot)}</div><div><div id="qr"></div><div class="meta">QR → постоянная страница локомотива</div></div></div></div>
  <div class="card"><h2>Эксплуатация</h2>${kv('Подтверждённый пробег',l.mileage!=null?Number(l.mileage).toLocaleString('ru-RU')+' км (на '+(l.mileageDate||'дату не указано')+')':'')}${kv('Последнее ТО',l.lastTO?l.lastTOType+' · '+l.lastTO:'')}${kv('Предыдущий ремонт',l.prevRepair)}
- <h3 class="sec">История пробега</h3>${ms.map(m=>`<div class="kv">${Number(m.value).toLocaleString('ru-RU')} км · ${fmt(m.ts)} · ${esc(m.source)} · ${esc(m.by||'')} ${m.comment?'· «'+esc(m.comment)+'»':''}</div>`).join('')||'<div class="nd">Нет данных</div>'}${dep?'<div class="actions"><button data-a="mile">+ Показание пробега</button></div>':''}
- <h3 class="sec">История ТО-1 — ТО-8</h3>${tos.map(t=>`<div class="kv">${esc(t.code)} · ${esc(t.date)} · ${Number(t.mileage||0).toLocaleString('ru-RU')} км</div>`).join('')||'<div class="nd">Нет данных</div>'}${dep?'<div class="actions"><button data-a="to">+ Выполнено ТО</button><button data-a="rule">+ Правило ТО для серии</button></div>':''}
+ <h3 class="sec">История пробега</h3>${ms.map(m=>`<div class="kv">${Number(m.value).toLocaleString('ru-RU')} км · ${fmt(m.ts)} ·${esc(m.source)} · ${esc(m.by\vert{}\vert{}'')}${m.comment?'· «'+esc(m.comment)+'»':''}</div>`).join('')||'<div class="nd">Нет данных</div>'}${dep?'<div class="actions"><button data-a="mile">+ Показание пробега</button></div>':''}
+ <h3 class="sec">История ТО-1 — ТО-8</h3>${tos.map(t=>`<div class="kv">${esc(t.code)} · ${esc(t.date)} ·${Number(t.mileage||0).toLocaleString('ru-RU')} км</div>`).join('')||'<div class="nd">Нет данных</div>'}${dep?'<div class="actions"><button data-a="to">+ Выполнено ТО</button><button data-a="rule">+ Правило ТО для серии</button></div>':''}
  <h3 class="sec">Ближайшее ТО</h3>${nextTO(l,tos)}</div>
- <div class="card"><h2>Техническое состояние</h2>${eq.map(q=>`<div class="kanban-item"><div class="row"><div class="id">${esc(q.name)}</div>${dep?`<select class="inl" data-a="eqs" data-id="${q.id}">${Object.entries(EQ).map(([k,v])=>`<option value="${k}" ${k===q.state?'selected':''}>${v}</option>`).join('')}</select>`:`<span class="badge progress">${EQ[q.state]||''}</span>`}</div><div class="meta">Изменений в истории: ${(q.history||[]).length}${q.history&&q.history.length?' · последнее: '+esc(q.history[q.history.length-1].reason):''}</div></div>`).join('')||'<div class="empty">Узлы не внесены. Отсутствие записей не означает исправность.</div>'}${dep?'<div class="actions"><button data-a="eq">+ Узел</button></div>':''}</div>
- <div class="card"><h2>Ремонты</h2><div class="actions">${cs.map(x=>`<button data-a="case" data-id="${x.id}" ${c&&x.id===c.id?'class="primary"':''}>№${x.caseNo} · ${ST[x.stage]}</button>`).join('')||'<span class="nd">Ремонтных случаев нет</span>'}</div>${c?caseBody(c,l,dep):''}</div>
+ <div class="card"><h2>Техническое состояние</h2>${eq.map(q=>`<div class="kanban-item"><div class="row"><div class="id">${esc(q.name)}</div>${dep?`<select class="inl" data-a="eqs" data-id="${q.id}">${Object.entries(EQ).map(([k,v])=>`<option value="${k}" ${k===q.state?'selected':''}>${v}</option>`).join('')}</select>`:`<span class="badge progress">${EQ[q.state]||''}</span>`}</div><div class="meta">Изменений в истории: ${(q.history\vert{}\vert{}[]).length}${q.history&&q.history.length?' · последнее: '+esc(q.history[q.history.length-1].reason):''}</div></div>`).join('')||'<div class="empty">Узлы не внесены. Отсутствие записей не означает исправность.</div>'}${dep?'<div class="actions"><button data-a="eq">+ Узел</button></div>':''}</div>
+ <div class="card"><h2>Ремонты</h2><div class="actions">${cs.map(x=>`<button data-a="case" data-id="${x.id}" ${c&&x.id===c.id?'class="primary"':''}>№${x.caseNo} ·${ST[x.stage]}</button>`).join('')||'<span class="nd">Ремонтных случаев нет</span>'}</div>${c?caseBody(c,l,dep):''}</div>
  <div class="card"><h2>Документы и фото</h2><div class="nd">Нет данных. Загрузка файлов требует Firebase Storage (в этой демо-версии не подключён).</div></div>`}
 function nextTO(l,tos){const rs=D.rules.filter(r=>r.series===l.series);if(!rs.length)return`<div class="warn">Правила ТО для серии «${esc(l.series)}» не заданы — срок рассчитать нельзя. Не выдумываем нормативы: добавьте утверждённое правило.</div>`;
  return rs.map(r=>{const last=byNew(tos.filter(t=>t.code===r.code))[0];if(!last)return`<div class="kv">${esc(r.code)}: нет записи о выполнении — расчёт невозможен</div>`;const left=Number(last.mileage)+Number(r.intervalKm)-Number(l.mileage||0);return`<div class="kv">${esc(r.code)}: ${left<0?'<span style="color:var(--danger)">просрочено на '+(-left)+' км</span>':'осталось '+left+' км'} · правило: ${esc(r.intervalKm)} км (источник: ${esc(r.source||'не указан')})</div>`}).join('')}
@@ -106,12 +307,12 @@ function caseBody(c,l,dep){
  ${kv('Причина обращения',c.reason)}${kv('Поступил',fmt(c.createdAt))}${kv('Пробег при поступлении',it.mileage?it.mileage+' км':'')}
  ${kv('Заявлено заказчиком (не подтверждено)',[it.description,it.symptoms,it.known].filter(Boolean).join(' · '))}${kv('Результат осмотра депо',c.inspectionResult)}${kv('Подтверждённая неисправность',c.confirmedFaults)}${kv('Ожидаемая дата завершения',c.eta)}${kv('Задержка',c.delayReason)}${c.pauseReason?kv('Причина приостановки',c.pauseReason):''}${c.cancelReason?kv('Причина отмены',c.cancelReason):''}${c.conclusion?kv('Итоговое заключение',c.conclusion):''}
  <h3 class="sec">Задачи</h3>${T.map(t=>`<div class="kanban-item"><div class="row"><div>${esc(t.title)}${t.source==='ai'?' <span class="badge progress">из ИИ-анализа</span>':''}</div>${t.status==='done'?'<span class="badge done">выполнено</span>':dep?`<button data-a="tdone" data-id="${t.id}">Выполнено</button>`:'<span class="badge waiting">ожидает</span>'}</div></div>`).join('')||'<div class="nd">Задач нет</div>'}
- <h3 class="sec">История стадий</h3>${byNew(D.hist).map(h=>`<div class="kv">${fmt(h.ts)} · ${ST[h.from]||'—'} → <b style="color:var(--text)">${ST[h.to]}</b> · ${esc(h.by)} ${h.comment?'· «'+esc(h.comment)+'»':''}</div>`).join('')||'<div class="nd">Нет данных</div>'}
+ <h3 class="sec">История стадий</h3>${byNew(D.hist).map(h=>`<div class="kv">${fmt(h.ts)} ·${ST[h.from]||'—'} → <b style="color:var(--text)">${ST[h.to]}</b> · ${esc(h.by)}${h.comment?'· «'+esc(h.comment)+'»':''}</div>`).join('')||'<div class="nd">Нет данных</div>'}
  ${dep?`<h3 class="sec">Действия депо</h3><div class="actions">${nexts(c).map(s=>`<button class="primary" data-a="move" data-to="${s}">→ ${ST[s]}</button>`).join('')}${c.stage==='plan'&&!c.planApproved?'<button data-a="approve">Утвердить план</button>':''}${!['issued','cancelled','paused'].includes(c.stage)?'<button data-a="pause">Приостановить</button><button class="danger" data-a="cancel">Отменить</button>':''}</div>
  <div class="actions"><button data-a="task">+ Задача</button><button data-a="field" data-f="inspectionResult" data-l="Результат осмотра">Результат осмотра</button><button data-a="field" data-f="confirmedFaults" data-l="Подтверждённая неисправность">Подтв. неисправность</button><button data-a="field" data-f="eta" data-l="Ожидаемая дата завершения">Срок</button><button data-a="field" data-f="delayReason" data-l="Причина задержки">Задержка</button></div>
  <h3 class="sec">Анализ ИИ</h3><div class="actions"><button class="primary" data-a="ai">Анализировать локомотив</button></div>${ai?aiBlock(ai):'<div class="nd">Анализов нет</div>'}`:''}`}
 function aiBlock(a){const r=a.result||{},L=x=>(x||[]).map(v=>`<li>${esc(txt(v))}</li>`).join('');
- return`<div class="kanban-item"><div class="meta">${fmt(a.ts)} · ${esc(a.model)} · требует подтверждения специалиста</div><p>${esc(r.summary)}</p>${r.findings?.length?'<b>Выводы</b><ul>'+L(r.findings)+'</ul>':''}${r.missingData?.length?'<b>Недостающие данные</b><ul>'+L(r.missingData)+'</ul>':''}<b>Рекомендуемые проверки</b>${(r.recommendedChecks||[]).map((x,k)=>`<div class="kv">• ${esc(x.title)} <span class="meta">[${esc(x.priority||'')}] ${esc(x.basis||x.description||'')}</span> <button data-a="topl" data-id="${a.id}" data-i="${k}" style="padding:4px 8px">В план</button></div>`).join('')||'<div class="nd">нет</div>'}${r.limitations?`<div class="meta">Ограничения: ${esc(r.limitations)}</div>`:''}</div>`}
+ return`<div class="kanban-item"><div class="meta">${fmt(a.ts)} · ${esc(a.model)} · требует подтверждения специалиста</div><p>${esc(r.summary)}</p>${r.findings?.length?'<b>Выводы</b><ul>'+L(r.findings)+'</ul>':''}${r.missingData?.length?'<b>Недостающие данные</b><ul>'+L(r.missingData)+'</ul>':''}<b>Рекомендуемые проверки</b>${(r.recommendedChecks||[]).map((x,k)=>`<div class="kv">• ${esc(x.title)} <span class="meta">[${esc(x.priority\vert{}\vert{}'')}]${esc(x.basis||x.description||'')}</span> <button data-a="topl" data-id="${a.id}" data-i="${k}" style="padding:4px 8px">В план</button></div>`).join('')||'<div class="nd">нет</div>'}${r.limitations?`<div class="meta">Ограничения: ${esc(r.limitations)}</div>`:''}</div>`}
 const nexts=c=>{const s=c.stage;if(['issued','cancelled'].includes(s))return[];if(s==='paused')return[c.prevStage||'created'];if(s==='parts')return['repair'];if(s==='repair')return['check','parts'];if(s==='check')return['customer','repair'];const n=ORDER[ORDER.indexOf(s)+1];return n?[n]:[]};
 function guard(c,to){const T=D.tasks.filter(t=>t.caseId===c.id);if(to==='ready'&&!(c.planApproved&&T.length))return'Нужны утверждённый план и хотя бы одна задача';if(['customer','done'].includes(to)&&T.some(t=>t.status!=='done'))return'Есть незакрытые задачи';return null}
 async function move(c,to,comment='',extra={}){const g=guard(c,to);if(g)return toast(g,'error');const d={stage:to,updatedAt:now(),...extra};
@@ -156,6 +357,7 @@ document.addEventListener('click',async e=>{const b=e.target.closest('[data-a]')
  if(a==='topl'&&c){const an=D.ai.find(x=>x.id===b.dataset.id),ch=an&&an.result.recommendedChecks[b.dataset.i];if(ch&&confirm('Добавить в план как задачу (решение специалиста)?'))await add('maintenanceTasks',{caseId:c.id,title:ch.title,description:ch.description||'',status:'todo',source:'ai',aiId:an.id,createdAt:now()})}
 });
 document.addEventListener('change',async e=>{const s=e.target;if(s.dataset&&s.dataset.a==='eqs'){const q=D.equipment.find(x=>x.id===s.dataset.id),r=prompt('Причина изменения состояния:');if(!r){render();return}await upd('equipment',q.id,{state:s.value,history:arrayUnion({from:q.state,to:s.value,ts:now(),reason:r,by:'депо (демо)'})})}});
-$('aiKey').onclick=()=>{const k=prompt('Ключ API (Groq: gsk_…, xAI: xai-…). Хранится только в этом браузере, в код не попадает:',localStorage.ai_key||'');if(k!==null){localStorage.ai_key=k.trim();const m=prompt('Модель (пусто — по умолчанию):',localStorage.ai_model||'');if(m!==null)localStorage.ai_model=m.trim();toast('Сохранено')}};
 const q=new URLSearchParams(location.search).get('loco');if(q)openLoco(q);else render();
-</script></body></html>
+</script>
+</body>
+</html>
