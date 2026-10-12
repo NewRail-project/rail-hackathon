@@ -3,25 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NewRail CORE HUD</title>
+    <title>NewRail · Обзор</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <div class="hud-wrapper">
         <header class="brand-header">
-            <h1>Система управления: NewRail</h1>
+            <h1>Система мониторинга: NewRail</h1>
         </header>
 
         <nav class="train-nav">
+            <a href="index.html" class="wagon active">Обзор</a>
             <a href="pages/park.html" class="wagon">Парк</a>
-            <a href="pages/loco.html" class="wagon">Локомотив</a>
+            <a href="pages/diagnostics.html" class="wagon">Диагностика</a>
+            <a href="pages/journal.html" class="wagon">Журнал</a>
             <a href="pages/repair.html" class="wagon">Ремонт</a>
-            <a href="pages/qr.html" class="wagon">QR-лист</a>
+            <a href="pages/qr.html" class="wagon">QR</a>
             <span class="train-head" aria-hidden="true"></span>
         </nav>
 
-        <main id="content-area">Ожидание данных...</main>
+        <main id="content-area">Загрузка...</main>
     </div>
+
+    <div id="toast-container"></div>
+
     <script type="module" src="js/data.js"></script>
     <script type="module" src="js/script.js"></script>
 </body>
