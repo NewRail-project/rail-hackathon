@@ -7,14 +7,14 @@ const loginForm = document.getElementById('login-form');
 if (loginForm) {
     loginForm.onsubmit = async (e) => {
         e.preventDefault();
-        const email = document.getElementById('auth-email').value;
+        const email = document.getElementById('auth-email').value.trim().toLowerCase();
         const pass = document.getElementById('auth-pass').value;
         try {
             await signInWithEmailAndPassword(auth, email, pass);
             // Если запуск локальный или на GitHub Pages, корректируем путь
             window.location.href = window.location.origin + window.location.pathname.replace('/pages/login.html', '/') + 'index.html';
         } catch (error) {
-            document.getElementById('auth-error').textContent = 'Доступ запрещен. Неверные учетные данные.';
+            document.getElementById('auth-error').textContent = 'Ошибка: ' + (error.code || error.message);
             document.getElementById('auth-error').style.display = 'block';
         }
     };
