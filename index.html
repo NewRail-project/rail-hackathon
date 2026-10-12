@@ -45,14 +45,14 @@ select.inl{width:auto;padding:6px 8px;font-size:12px}.nd{color:var(--text-dim)}.
 <main id="view"></main></div>
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
-import {getFirestore,collection,addDoc,updateDoc,doc,onSnapshot,query,where,arrayUnion} from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
+import {getFirestore,collection,addDoc,updateDoc,deleteDoc,doc,onSnapshot,query,where,arrayUnion} from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
 const db=getFirestore(initializeApp({apiKey:"AIzaSyDoD1pNfA_cfiqCUwAKT7XHfNLOsedmhdU",authDomain:"rail-hackathon-db.firebaseapp.com",projectId:"rail-hackathon-db",storageBucket:"rail-hackathon-db.firebasestorage.app",messagingSenderId:"257494735942",appId:"1:257494735942:web:1aa10dcb7f25c83fcf3e47"}));
 const $=i=>document.getElementById(i),now=()=>Date.now();
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const nd=v=>v||v===0?esc(v):'<span class="nd">Нет данных</span>',fmt=t=>t?new Date(t).toLocaleString('ru-RU'):'—',txt=x=>typeof x==='string'?x:JSON.stringify(x);
 const toast=(t,k='')=>{const e=document.createElement('div');e.className='toast '+k;e.textContent=t;document.body.appendChild(e);setTimeout(()=>{e.style.opacity=0;setTimeout(()=>e.remove(),300)},3000)};
 const err=e=>toast('Ошибка: '+(e.code||e.message),'error');
-const add=(n,d)=>addDoc(collection(db,n),d).catch(err),upd=(n,id,d)=>updateDoc(doc(db,n,id),d).catch(err);
+const add=(n,d)=>addDoc(collection(db,n),d).catch(err),upd=(n,id,d)=>updateDoc(doc(db,n,id),d).catch(err),del=(n,id)=>deleteDoc(doc(db,n,id)).catch(err);
 const ST={created:'Заявка создана',waiting:'Ожидает приёмки',accepted:'Локомотив принят',inspection:'Первичный осмотр',diagnostics:'Диагностика',plan:'Согласование плана работ',ready:'Ожидает начала ремонта',repair:'В ремонте',parts:'Ожидает детали/материалы',check:'Контрольная проверка',customer:'Ожидает приёмки заказчиком',done:'Ремонт завершён',issued:'Локомотив выдан',paused:'Приостановлен',cancelled:'Отменён'};
 const ORDER=['created','waiting','accepted','inspection','diagnostics','plan','ready','repair','check','customer','done','issued'];
 const EQ={unknown:'Состояние не установлено',ok:'Норма по результатам проверки',check:'Требуется доп. проверка',defect:'Обнаружен дефект',repair:'Требуется ремонт',inrepair:'Ремонт выполняется',wait:'Ожидает контрольной проверки',fixed:'Восстановлено по результатам проверки'};
@@ -79,13 +79,13 @@ function list(){
  const dep=isDepot(),org=myOrg(),ls=byNew(D.locos.filter(l=>dep||(org&&l.org===org)));
  let h=`<div class="toolbar"><button class="primary" data-a="new">+ Сдать локомотив в ремонт</button>${dep?'<button data-a="seed">Демо-данные</button>':''}</div>`;
  if(!dep&&!org)h+='<div class="empty">Введите название вашей организации в шапке, чтобы увидеть свои локомотивы</div>';
- else h+=ls.length?ls.map(l=>`<div class="kanban-item"><div class="row"><div class="id">${esc(l.number)} · ${esc(l.series)}</div>${status(l)}</div><div class="meta">${esc(l.org)} · ${Number(l.mileage||0).toLocaleString('ru-RU')} км</div><div class="actions"><button data-a="open" data-id="${l.id}">Паспорт</button></div></div>`).join(''):'<div class="empty">Локомотивов пока нет</div>';
+ else h+=ls.length?ls.map(l=>`<div class="kanban-item"><div class="row"><div class="id">${esc(l.number)} · ${esc(l.series)}</div>${status(l)}</div><div class="meta">${esc(l.org)} · ${Number(l.mileage||0).toLocaleString('ru-RU')} км</div><div class="actions"><button data-a="open" data-id="${l.id}">Паспорт</button>${dep?`<button class="danger" data-a="delloco" data-id="${l.id}">Удалить</button>`:''}</div></div>`).join(''):'<div class="empty">Локомотивов пока нет</div>';
  return h}
 
 const FORM=[['Локомотив',[['number','Номер*'],['series','Серия и модель*'],['type','Тип',['','Электровоз','Тепловоз','Маневровый']],['factoryNo','Заводской номер'],['year','Год выпуска','number'],['depot','Депо приписки'],['mileage','Текущий пробег, км*','number'],['mileageDate','Дата подтверждения пробега','date'],['lastTO','Дата последнего ТО','date'],['lastTOType','Вид последнего ТО',['',...TO]],['prevRepair','Предыдущий ремонт']]],
 ['Заказчик',[['org','Организация*'],['rep','ФИО представителя*'],['position','Должность'],['phone','Телефон','tel'],['email','E-mail','email']]],
 ['Причина поступления',[['reason','Причина*',['','Плановое ТО','Обнаруженная неисправность','Внеплановый ремонт','Диагностическая проверка','Повторное обращение','Другая']],['description','Описание проблемы','area'],['symptoms','Симптомы','area'],['found','Когда обнаружена'],['conditions','При каких условиях проявляется'],['nodes','Предположительно затронутые узлы'],['prechecks','Проведённые проверки'],['notes','Дополнительные замечания']]],
-['Состояние при сдаче',[['external','Внешнее состояние','area'],['known','Известные неисправности','area'],['complete','комплектность'],['handover','Замечания при передаче']]]];
+['Состояние при сдаче',[['external','Внешнее состояние','area'],['known','Известные неисправности','area'],['complete','Комплектность'],['handover','Замечания при передаче']]]];
 function openForm(){S.v='form';const dep=isDepot();
  $('view').innerHTML='<form id="intake" class="card" novalidate><h2>Сдать локомотив в ремонт</h2><div class="subtitle">Неизвестные данные оставьте пустыми — они не будут заменены выдуманными</div>'+FORM.map(([t,fs])=>`<h3 class="sec">${t}</h3><div class="grid grid-2">`+fs.map(([n,l,k])=>`<div class="field"><label>${l}</label>`+(Array.isArray(k)?`<select name="${n}">${k.map(o=>`<option>${o}</option>`).join('')}</select>`:k==='area'?`<textarea name="${n}" rows="2"></textarea>`:`<input name="${n}" type="${k||'text'}" ${n==='org'&&!dep?`value="${esc(myOrg())}"`:''}>`)+'</div>').join('')+'</div>').join('')+'<div class="row" style="justify-content:flex-start"><button class="primary">Зарегистрировать</button><button type="button" data-a="home">Отмена</button></div></form>';
  $('intake').onsubmit=submitIntake}
@@ -112,7 +112,7 @@ function passport(){
  const dep=isDepot();if(!dep&&l.org!==myOrg())return'<div class="empty">Нет доступа: локомотив принадлежит другой организации<br><br><button data-a="home">Назад</button></div>';
  const cs=locoCases(l.id),c=cs.find(x=>x.id===S.cid)||activeCase(l.id)||cs[0];ensureCase(c);
  const ms=byNew(D.miles),tos=byNew(D.tos),eq=byNew(D.equipment);
- return`<div class="row"><button data-a="home">← К списку</button><span>${status(l)}</span></div>
+ return`<div class="row"><button data-a="home">← К списку</button>${dep?`<button class="danger" data-a="delloco" data-id="${l.id}">Удалить локомотив</button>`:''}<span>${status(l)}</span></div>
  <div class="card"><h2>Цифровой паспорт ${esc(l.number)}</h2><div class="row" style="align-items:flex-start"><div>${kv('Серия и модель',l.series)}${kv('Тип',l.type)}${kv('Заводской номер',l.factoryNo)}${kv('Год выпуска',l.year)}${kv('Организация-владелец',l.org)}${kv('Депо приписки',l.depot)}</div><div><div id="qr"></div><div class="meta">QR → постоянная страница локомотива</div></div></div></div>
  <div class="card"><h2>Эксплуатация</h2>${kv('Подтверждённый пробег',l.mileage!=null?Number(l.mileage).toLocaleString('ru-RU')+' км (на '+(l.mileageDate||'дату не указано')+')':'')}${kv('Последнее ТО',l.lastTO?l.lastTOType+' · '+l.lastTO:'')}${kv('Предыдущий ремонт',l.prevRepair)}
  <h3 class="sec">История пробега</h3>${ms.map(m=>`<div class="kv">${Number(m.value).toLocaleString('ru-RU')} км · ${fmt(m.ts)} ·${esc(m.source)} · ${esc(m.by\vert{}\vert{}'')}${m.comment?'· «'+esc(m.comment)+'»':''}</div>`).join('')||'<div class="nd">Нет данных</div>'}${dep?'<div class="actions"><button data-a="mile">+ Показание пробега</button></div>':''}
@@ -165,6 +165,16 @@ document.addEventListener('click',async e=>{const b=e.target.closest('[data-a]')
  if(a==='home'){locoSubs.forEach(u=>u());caseSubs.forEach(u=>u());S={v:'list'};return render()}
  if(a==='new')return openForm();if(a==='open')return openLoco(b.dataset.id);if(a==='seed')return seed();
  if(a==='case'){S.cid=b.dataset.id;return render()}
+ if(a==='delloco'&&dep){
+   const locoId=b.dataset.id;
+   if(confirm('Внимание! Локомотив будет полностью удален из базы данных. Продолжить?')){
+     await del('locomotives',locoId);
+     toast('Локомотив удален','success');
+     S={v:'list'};
+     render();
+   }
+   return;
+ }
  if(!dep)return;
  if(a==='mile'){const v=Number(prompt('Новое показание пробега, км:'));if(!v)return;let cm='';if(v<(l.mileage||0)){cm=prompt('Значение меньше предыдущего. Причина корректировки:');if(!cm)return toast('Нужна причина','error')}
   await add('mileageReadings',{locoId:l.id,value:v,ts:now(),source:'депо',by:'депо (демо)',comment:cm,caseId:c?c.id:''});await upd('locomotives',l.id,{mileage:v,mileageDate:new Date().toISOString().slice(0,10)})}
@@ -184,3 +194,4 @@ document.addEventListener('click',async e=>{const b=e.target.closest('[data-a]')
 document.addEventListener('change',async e=>{const s=e.target;if(s.dataset&&s.dataset.a==='eqs'){const q=D.equipment.find(x=>x.id===s.dataset.id),r=prompt('Причина изменения состояния:');if(!r){render();return}await upd('equipment',q.id,{state:s.value,history:arrayUnion({from:q.state,to:s.value,ts:now(),reason:r,by:'депо (демо)'})})}});
 const q=new URLSearchParams(location.search).get('loco');if(q)openLoco(q);else render();
 </script></body></html>
+
