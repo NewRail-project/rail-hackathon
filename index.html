@@ -3,21 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NewRail CORE HUD</title>
+    <title>NEWRAIL | Панель управления</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div class="hud-wrapper">
-        <header><h1>Система управления: NewRail</h1></header>
-        <nav>
-            <a href="pages/park.html">Парк</a>
-            <a href="pages/loco.html">Локомотив</a>
-            <a href="pages/repair.html">Ремонт</a>
-            <a href="pages/qr.html">QR-лист</a>
+    <header class="navbar">
+        <h1 class="logo">NEWRAIL</h1>
+        <nav class="nav-links">
+            <a href="index.html" class="active">Дашборд</a>
+            <button id="devLogout">Выход</button>
         </nav>
-        <main id="content-area">Ожидание данных...</main>
+    </header>
+
+    <main class="dashboard-container">
+        <section class="stats-panel">
+            <div class="stat-card" id="stat-total">Всего в парке: <span>0</span></div>
+            <div class="stat-card" id="stat-ok">В норме: <span>0</span></div>
+            <div class="stat-card" id="stat-warning">Требуют проверки: <span>0</span></div>
+            <div class="stat-card" id="stat-critical">Критичные: <span>0</span></div>
+        </section>
+
+        <section class="loco-registry">
+            <div class="registry-header">
+                <h2>Реестр локомотивов</h2>
+                <button id="btn-add-loco" class="btn-primary">+ Добавить локомотив</button>
+            </div>
+            <div class="table-container">
+                <table id="loco-table">
+                    <thead>
+                        <tr>
+                            <th>Номер</th>
+                            <th>Серия и Тип</th>
+                            <th>Питание</th>
+                            <th>Статус</th>
+                            <th>Действие</th>
+                        </tr>
+                    </thead>
+                    <tbody id="loco-table-body"></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <div id="add-loco-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3>Регистрация локомотива</h3>
+            <form id="add-loco-form" class="data-form">
+                <input type="text" id="loco-num" placeholder="Номер (напр. KZ8-002)" required>
+                <input type="text" id="loco-series" placeholder="Серия (напр. KZ8A)" required>
+                <input type="text" id="loco-type" placeholder="Тип (Грузовой/Пассажирский)" required>
+                <select id="loco-power" required>
+                    <option value="">Тип питания...</option>
+                    <option value="Переменный ток (25 кВ)">Переменный ток (25 кВ)</option>
+                    <option value="Постоянный ток (3 кВ)">Постоянный ток (3 кВ)</option>
+                    <option value="Дизель">Автономный (Дизель)</option>
+                </select>
+                <input type="text" id="loco-depot" placeholder="Депо приписки" required>
+                <label>Фотография локомотива:</label>
+                <input type="file" id="loco-photo" accept="image/*">
+                
+                <button type="submit" class="btn-primary">Сохранить в базу</button>
+                <button type="button" id="btn-close-modal">Отмена</button>
+            </form>
+        </div>
     </div>
-    <script type="module" src="js/data.js"></script>
-    <script type="module" src="js/script.js"></script>
+    <script type="module" src="js/app.js"></script>
 </body>
 </html>
