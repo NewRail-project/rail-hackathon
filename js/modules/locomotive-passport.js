@@ -1,126 +1,156 @@
-import { db } from '../config.js';
-import { doc, getDoc, collection, addDoc, updateDoc, onSnapshot, serverTimestamp, query, where } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
-import { checkMeasurement } from '../logic/anomaly-rules.js';
+// =====================================================
+// js/modules/locomotive-passport.js
+// Модуль цифрового паспорта локомотива, телеметрии и проверки пробега
+// =====================================================
 
-export const initPassport = async () => {
-    const params = new URLSearchParams(window.location.search);
-    const locoId = params.get('id');
-    if (!locoId) return alert("Локомотив не найден");
+import { db } from "../app.js";
+import { ref, get, update, push } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+import { showToast, beep } from "../script.js";
 
-    const locoRef = doc(db, "locomotives", locoId);
-    
-    // 1. Шапка паспорта
-    const locoSnap = await getDoc(locoRef);
-    if (locoSnap.exists()) {
-        const data = locoSnap.data();
-        document.getElementById('loco-title').textContent = `${data.number} (${data.series})`;
-        document.getElementById('loco-specs').innerHTML = `Тип: ${data.type || '-'} <br> Питание: ${data.power || '-'} <br> Депо: ${data.depot || '-'}`;
-        document.getElementById('loco-status-badge').textContent = data.status;
-        if (data.photo) document.getElementById('loco-photo-container').innerHTML = `<img src="${data.photo}" style="width:100%; height:100%; object-fit:cover;">`;
+export function initLocomotivePassport() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const locoId = urlParams.get("id") || urlParams.get("loco") || "001";
+
+    const passportContainer = document.getElementById("locomotive-passport") || document.querySelector(".app-container");
+    if (!passportContainer) return;
+
+    loadPassportData(locoId, passportContainer);
+}
+
+async function loadPassportData(id, container) {
+    try {
+        const locoRef = ref(db, `locomotives/${id}`);
+        const snapshot = await get(locoRef);
+
+        const data = snapshot.exists() ? snapshot.val() : {
+            series: "КЗ8А",
+            model: "Электровоз грузовой",
+            depot: "ТД-20",
+            current_mileage: 142500,
+            last_to: "ТО-2 (10.05.2026)",
+            temperature: 78,
+            vibration: 5.2,
+            status: "warning",
+            status_text: "ТРЕБУЕТ ПРОВЕРКИ"
+        };
+
+        renderPassportHTML(id, data, container);
+        setupMileageLogic(id, data.current_mileage || 0);
+
+    } catch (error) {
+        console.error("Ошибка загрузки паспорта локомотива:", error);
+        showToast("Ошибка загрузки данных из Firebase", "error");
     }
+}
 
-    // 2. Оборудование и Диагностика
-    const equipSelect = document.getElementById('equip-select');
-    const equipList = document.getElementById('equipment-list');
-    const qEquip = query(collection(db, "equipment"), where("locomotiveId", "==", locoId));
-    
-    let equipmentData = {};
-    onSnapshot(qEquip, (snapshot) => {
-        equipSelect.innerHTML = '<option value="">Выберите узел...</option>';
-        equipList.innerHTML = '';
-        snapshot.forEach(docSnap => {
-            const eq = docSnap.data();
-            equipmentData[docSnap.id] = eq;
-            
-            equipSelect.innerHTML += `<option value="${docSnap.id}">${eq.name}</option>`;
-            equipList.innerHTML += `<div class="card"><h4>${eq.name}</h4><p>Последнее измерение: <span id="val-${docSnap.id}">-</span></p></div>`;
+function renderPassportHTML(id, data, container) {
+    container.innerHTML = `
+        <div class="card" style="margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px; margin-bottom: 15px;">
+                <div>
+                    <h2 style="margin: 0;">ЛОКОМОТИВ № ${id}</h2>
+                    <span class="subtitle">Серия: ${data.series || "КЗ8А"} | Модель: ${data.model || "Электровоз"}</span>
+                </div>
+                <div class="badge ${data.status === 'normal' ? 'success' : 'warning'}" id="loco-status-badge">
+                    ${data.status_text || "ТРЕБУЕТ ПРОВЕРКИ"}
+                </div>
+            </div>
+
+            <!-- Вкладки цифрового паспорта -->
+            <div class="train-nav" style="margin-bottom: 20px; display: flex; gap: 10px;">
+                <button class="nav-item active" data-tab="general">ОБЩАЯ ИНФОРМАЦИЯ</button>
+                <button class="nav-item" data-tab="diag">ДИАГНОСТИКА</button>
+                <button class="nav-item" data-tab="journal">ЖУРНАЛ ТУ-152</button>
+                <button class="nav-item" data-tab="repair">РЕМОНТ И ТО</button>
+            </div>
+
+            <!-- Содержимое паспорта -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="card" style="background: rgba(0,0,0,0.2);">
+                    <h3>Эксплуатационные данные</h3>
+                    <p><strong>Текущий пробег:</strong> <span id="current-mileage-val">${data.current_mileage || 0}</span> км</p>
+                    <p><strong>Депо приписки:</strong> ${data.depot || "ТД-20"}</p>
+                    <p><strong>Последнее ТО:</strong> ${data.last_to || "ТО-2"}</p>
+                    
+                    <div style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+                        <input type="number" id="input-new-mileage" class="form-control" placeholder="Новый пробег" style="padding: 6px; width: 140px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2); background: transparent; color: inherit;">
+                        <button id="btn-update-mileage" class="btn btn-secondary" style="padding: 6px 12px;">Обновить</button>
+                    </div>
+                </div>
+
+                <div class="card" style="background: rgba(0,0,0,0.2);">
+                    <h3>Телеметрия узлов</h3>
+                    <p><strong>Температура узла:</strong> <span style="color: #f5c518; font-weight: bold;">${data.temperature || 78} °C</span></p>
+                    <p><strong>Вибрация:</strong> <span style="color: #f5c518; font-weight: bold;">${data.vibration || 5.2} мм/с</span></p>
+                    <p><strong>Рекомендация Grok:</strong> ${data.recommendation || "Провести техническую проверку узла"}</p>
+                </div>
+            </div>
+
+            <!-- Быстрые действия -->
+            <div style="margin-top: 20px; display: flex; gap: 10px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
+                <a href="repair.html" class="btn btn-secondary">Открыть журнал ТУ-152</a>
+                <button id="btn-create-repair-case" class="btn btn-primary">Создать заявку на ремонт</button>
+            </div>
+        </div>
+    `;
+
+    // Обработчик создания ремонтной заявки
+    document.getElementById("btn-create-repair-case").addEventListener("click", async () => {
+        const queueRef = ref(db, `service_queue`);
+        await push(queueRef, {
+            locomotive_id: id,
+            status: "waiting",
+            priority: "high",
+            timestamp: Date.now(),
+            description: "Создана заявка из цифрового паспорта локомотива"
         });
+        showToast("Заявка успешно создана!", "success");
+        beep(700, 0.1);
     });
+}
 
-    document.getElementById('measurement-form').onsubmit = async (e) => {
-        e.preventDefault();
-        const eqId = equipSelect.value;
-        const val = parseFloat(document.getElementById('metric-value').value);
-        if (!eqId || isNaN(val)) return;
+function setupMileageLogic(locoId, previousMileage) {
+    const updateBtn = document.getElementById("btn-update-mileage");
+    const inputField = document.getElementById("input-new-mileage");
 
-        const eqType = equipmentData[eqId].type || 'traction_motor';
-        const measureRef = await addDoc(collection(db, "measurements"), {
-            locomotiveId: locoId, equipmentId: eqId, metric: "temperature", value: val, recordedAt: serverTimestamp()
-        });
+    if (!updateBtn || !inputField) return;
 
-        document.getElementById(`val-${eqId}`).textContent = `${val} °C`;
+    updateBtn.addEventListener("click", async () => {
+        const newMileage = Number(inputField.value);
 
-        const diagnosticResult = checkMeasurement(eqType, "temperature", val, null); // Для демо упростим до проверки порога
-        
-        if (diagnosticResult.hasDeviation) {
-            await addDoc(collection(db, "diagnosticEvents"), {
-                locomotiveId: locoId, equipmentId: eqId, value: val, message: diagnosticResult.message, recommendation: diagnosticResult.recommendation, status: "open", createdAt: serverTimestamp()
-            });
-            await updateDoc(locoRef, { status: 'critical' });
-            alert(`Аномалия зафиксирована: ${diagnosticResult.message}`);
+        if (isNaN(newMileage) || inputField.value.trim() === "") {
+            showToast("Введите корректное число пробега", "error");
+            return;
         }
-        document.getElementById('measurement-form').reset();
-    };
 
-    // 3. Трекинг Отклонений (Событий)
-    const anomaliesList = document.getElementById('anomalies-list');
-    onSnapshot(query(collection(db, "diagnosticEvents"), where("locomotiveId", "==", locoId), where("status", "==", "open")), (snapshot) => {
-        anomaliesList.innerHTML = snapshot.empty ? 'Нет активных отклонений' : '';
-        snapshot.forEach(docSnap => {
-            const ev = docSnap.data();
-            anomaliesList.innerHTML += `
-                <div style="border: 1px solid #ff4d4d; padding: 10px; margin-bottom: 5px;">
-                    <strong>${ev.message}</strong><br><small>${ev.recommendation}</small><br>
-                    <button class="btn-create-task" data-id="${docSnap.id}" data-eq="${ev.equipmentId}">В ремонт (Создать задачу)</button>
-                </div>
-            `;
+        // Защита: если новый пробег меньше предыдущего
+        if (newMileage < previousMileage) {
+            const reason = prompt("Внимание! Новый пробег меньше предыдущего. Укажите причину корректировки:");
+            if (!reason) {
+                showToast("Обновление отменено: не указана причина", "warning");
+                return;
+            }
+
+            // Сохраняем историю корректировки в Firebase
+            const historyRef = ref(db, `mileage_corrections/${locoId}`);
+            await push(historyRef, {
+                old_mileage: previousMileage,
+                new_mileage: newMileage,
+                reason: reason,
+                timestamp: Date.now()
+            });
+        }
+
+        // Обновляем в Firebase
+        const locoRef = ref(db, `locomotives/${locoId}`);
+        await update(locoRef, {
+            current_mileage: newMileage,
+            last_mileage_update: Date.now()
         });
 
-        document.querySelectorAll('.btn-create-task').forEach(btn => {
-            btn.onclick = async (e) => {
-                const eventId = e.target.getAttribute('data-id');
-                const eqId = e.target.getAttribute('data-eq');
-                // Создаем задачу
-                await addDoc(collection(db, "maintenanceTasks"), {
-                    locomotiveId: locoId, equipmentId: eqId, relatedEventId: eventId, title: "Внеплановый осмотр", status: "planned", priority: "high", createdAt: serverTimestamp()
-                });
-                // Закрываем событие
-                await updateDoc(doc(db, "diagnosticEvents", eventId), { status: "task_created" });
-            };
-        });
+        showToast("Пробег успешно обновлен в системе", "success");
+        beep(880, 0.15);
+        
+        loadPassportData(locoId, document.getElementById("locomotive-passport") || document.querySelector(".app-container"));
     });
-
-    // 4. Трекинг Задач ТО
-    const tasksList = document.getElementById('tasks-list');
-    onSnapshot(query(collection(db, "maintenanceTasks"), where("locomotiveId", "==", locoId)), (snapshot) => {
-        tasksList.innerHTML = snapshot.empty ? 'Нет активных задач' : '';
-        snapshot.forEach(docSnap => {
-            const task = docSnap.data();
-            if (task.status === 'completed') return; // Скрываем выполненные
-            
-            tasksList.innerHTML += `
-                <div style="border: 1px solid #4da6ff; padding: 10px; margin-bottom: 5px;">
-                    <strong>${task.title}</strong> (Приоритет: ${task.priority})<br><small>Статус: ${task.status}</small><br>
-                    <button class="btn-complete-task" data-id="${docSnap.id}">Завершить работу</button>
-                </div>
-            `;
-        });
-
-        document.querySelectorAll('.btn-complete-task').forEach(btn => {
-            btn.onclick = async (e) => {
-                const taskId = e.target.getAttribute('data-id');
-                await updateDoc(doc(db, "maintenanceTasks", taskId), { status: "completed", completedAt: serverTimestamp() });
-                // Если задач больше нет, можно вернуть статус локомотива в normal (требует доп проверки, но для демо ок)
-            };
-        });
-    });
-
-    // 5. QR Код
-    const qrModal = document.getElementById('qr-modal');
-    document.getElementById('btn-generate-qr').onclick = () => {
-        document.getElementById('qr-container').innerHTML = '';
-        new QRCode(document.getElementById('qr-container'), { text: window.location.href, width: 200, height: 200 });
-        qrModal.style.display = 'flex';
-    };
-    document.getElementById('btn-close-qr').onclick = () => qrModal.style.display = 'none';
-};
+}

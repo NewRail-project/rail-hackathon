@@ -1,70 +1,111 @@
-import { db } from '../config.js';
-import { collection, onSnapshot, doc, updateDoc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
-import { generateRepairPlan } from './ai-planner.js';
+// =====================================================
+// js/modules/maintenance.js
+// Управление ремонтными случаями, задачами и историей ремонта
+// =====================================================
 
-export const initMaintenance = () => {
-    const colPlanned = document.getElementById('tasks-planned');
-    const colProgress = document.getElementById('tasks-progress');
-    const colDone = document.getElementById('tasks-done');
+import { db } from "../app.js";
+import { ref, get, push, update } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+import { showToast, beep } from "../script.js";
 
-    const q = query(collection(db, "maintenanceTasks"), orderBy("createdAt", "desc"));
+export function initMaintenanceModule() {
+    const container = document.getElementById("maintenance-container") || document.querySelector(".app-container");
+    if (!container) return;
 
-    onSnapshot(q, (snapshot) => {
-        colPlanned.innerHTML = '';
-        colProgress.innerHTML = '';
-        colDone.innerHTML = '';
+    loadRepairCases(container);
+}
 
-        snapshot.forEach(docSnap => {
-            const task = docSnap.data();
-            const id = docSnap.id;
-            
-            const card = document.createElement('div');
-            card.style.cssText = 'background: #2a2a40; padding: 10px; margin-bottom: 10px; border-radius: 5px; border-left: 4px solid #fff;';
-            if (task.priority === 'high') card.style.borderLeftColor = '#ff4d4d';
-            
-            let buttons = '';
-            let aiPlanBlock = task.aiPlan ? `<div style="margin-top:10px; padding:8px; background:#1a1a2e; font-size:12px; color:#a0a0b5; border-radius:4px;"><strong>План ремонта:</strong><br>${task.aiPlan.replace(/\n/g, '<br>')}</div>` : '';
+async function loadRepairCases(container) {
+    try {
+        const casesRef = ref(db, "maintenanceCases");
+        const snapshot = await get(casesRef);
 
-            if (task.status === 'planned') {
-                buttons = `
-                    <button class="btn-take" data-id="${id}" style="margin-top: 10px; width: 100%;">Взять в работу</button>
-                    ${!task.aiPlan ? `<button class="btn-ai btn-secondary" data-id="${id}" data-title="${task.title}" style="margin-top: 5px; width: 100%;">🤖 Сгенерировать план</button>` : ''}
+        let casesHtml = `
+            <div class="card" style="margin-top: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <div>
+                        <h3 style="margin: 0;">Ремонтные случаи и история</h3>
+                        <span class="subtitle">Управление диагностикой, этапами и выполнением работ</span>
+                    </div>
+                    <button id="btn-new-repair" class="btn btn-primary">Новое поступление</button>
+                </div>
+                <div class="table-container" style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <th style="padding: 10px;">Локомотив</th>
+                                <th style="padding: 10px;">Дата поступления</th>
+                                <th style="padding: 10px;">Жалоба / Неисправность</th>
+                                <th style="padding: 10px;">Стадия ремонта</th>
+                                <th style="padding: 10px;">Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="repair-table-body">
+        `;
+
+        if (snapshot.exists()) {
+            const cases = snapshot.val();
+            Object.keys(cases).forEach(key => {
+                const item = cases[key];
+                casesHtml += `
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td style="padding: 10px;"><strong>№ ${item.locomotive_id || "—"}</strong></td>
+                        <td style="padding: 10px;">${item.date ? new Date(item.date).toLocaleDateString("ru-RU") : "—"}</td>
+                        <td style="padding: 10px;">${item.complaint || item.description || "Плановый осмотр"}</td>
+                        <td style="padding: 10px;"><span class="badge warning">${item.status || "Принят в депо"}</span></td>
+                        <td style="padding: 10px;">
+                            <button class="btn btn-secondary btn-open-case" data-id="${key}" style="padding: 4px 8px; font-size: 12px;">Открыть</button>
+                        </td>
+                    </tr>
                 `;
-                colPlanned.appendChild(card);
-            } else if (task.status === 'in_progress') {
-                buttons = `<button class="btn-complete" data-id="${id}" style="margin-top: 10px; width: 100%;">Завершить</button>`;
-                colProgress.appendChild(card);
-            } else if (task.status === 'completed') {
-                card.style.opacity = '0.6';
-                colDone.appendChild(card);
-            }
+            });
+        } else {
+            casesHtml += `<tr><td colspan="5" style="text-align: center; opacity: 0.7; padding: 20px;">Активных ремонтных случаев нет</td></tr>`;
+        }
 
-            card.innerHTML = `
-                <strong>${task.title}</strong><br>
-                <small>Приоритет: ${task.priority}</small>
-                ${aiPlanBlock}
-                ${buttons}
-            `;
+        casesHtml += `</tbody></table></div></div>`;
+        
+        container.innerHTML = casesHtml;
+        setupNewRepairHandler();
+        setupOpenCaseHandlers();
+
+    } catch (e) {
+        console.error("Ошибка загрузки ремонтных случаев:", e);
+        showToast("Ошибка загрузки ремонтных данных", "error");
+    }
+}
+
+function setupNewRepairHandler() {
+    const btnNew = document.getElementById("btn-new-repair");
+    if (!btnNew) return;
+
+    btnNew.onclick = async () => {
+        const locoId = prompt("Введите номер локомотива для создания ремонтного случая:");
+        if (!locoId) return;
+
+        const complaint = prompt("Укажите заявленную неисправность или причину обращения:");
+        
+        const casesRef = ref(db, "maintenanceCases");
+        await push(casesRef, {
+            locomotive_id: locoId,
+            complaint: complaint || "Внеплановый осмотр",
+            status: "Принят в депо",
+            date: Date.now(),
+            stage: "Приемка"
         });
 
-        document.querySelectorAll('.btn-take').forEach(btn => btn.onclick = async (e) => await updateDoc(doc(db, "maintenanceTasks", e.target.dataset.id), { status: 'in_progress' }));
-        document.querySelectorAll('.btn-complete').forEach(btn => btn.onclick = async (e) => await updateDoc(doc(db, "maintenanceTasks", e.target.dataset.id), { status: 'completed', completedAt: serverTimestamp() }));
+        showToast("Ремонтный случай успешно создан!", "success");
+        beep(750, 0.1);
         
-        document.querySelectorAll('.btn-ai').forEach(btn => {
-            btn.onclick = async (e) => {
-                const taskId = e.target.dataset.id;
-                const title = e.target.dataset.title;
-                e.target.textContent = '⏳ Генерация...';
-                e.target.disabled = true;
-                
-                const plan = await generateRepairPlan(title, "Оборудование локомотива");
-                if (plan) {
-                    await updateDoc(doc(db, "maintenanceTasks", taskId), { aiPlan: plan });
-                } else {
-                    e.target.textContent = '🤖 Сгенерировать план';
-                    e.target.disabled = false;
-                }
-            };
+        // Перезагружаем список
+        initMaintenanceModule();
+    };
+}
+
+function setupOpenCaseHandlers() {
+    document.querySelectorAll(".btn-open-case").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+            const caseId = e.target.getAttribute("data-id");
+            window.location.href = `repair.html?id=${caseId}`;
         });
     });
-};
+}
