@@ -1,70 +1,99 @@
-import { db } from '../config.js';
-import { collection, onSnapshot, doc, updateDoc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
-import { generateRepairPlan } from './ai-planner.js';
+// =====================================================
+// js/modules/maintenance.js
+// Управление ремонтными случаями, задачами и историей ремонта
+// =====================================================
 
-export const initMaintenance = () => {
-    const colPlanned = document.getElementById('tasks-planned');
-    const colProgress = document.getElementById('tasks-progress');
-    const colDone = document.getElementById('tasks-done');
+import { db } from "../app.js";
+import { ref, get, push, update } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
-    const q = query(collection(db, "maintenanceTasks"), orderBy("createdAt", "desc"));
+export function initMaintenanceModule() {
+    const container = document.getElementById("maintenance-container") || document.querySelector(".app-container");
+    if (!container) return;
 
-    onSnapshot(q, (snapshot) => {
-        colPlanned.innerHTML = '';
-        colProgress.innerHTML = '';
-        colDone.innerHTML = '';
+    loadRepairCases();
+}
 
-        snapshot.forEach(docSnap => {
-            const task = docSnap.data();
-            const id = docSnap.id;
-            
-            const card = document.createElement('div');
-            card.style.cssText = 'background: #2a2a40; padding: 10px; margin-bottom: 10px; border-radius: 5px; border-left: 4px solid #fff;';
-            if (task.priority === 'high') card.style.borderLeftColor = '#ff4d4d';
-            
-            let buttons = '';
-            let aiPlanBlock = task.aiPlan ? `<div style="margin-top:10px; padding:8px; background:#1a1a2e; font-size:12px; color:#a0a0b5; border-radius:4px;"><strong>План ремонта:</strong><br>${task.aiPlan.replace(/\n/g, '<br>')}</div>` : '';
+async function loadRepairCases() {
+    try {
+        const casesRef = ref(db, "maintenanceCases");
+        const snapshot = await get(casesRef);
 
-            if (task.status === 'planned') {
-                buttons = `
-                    <button class="btn-take" data-id="${id}" style="margin-top: 10px; width: 100%;">Взять в работу</button>
-                    ${!task.aiPlan ? `<button class="btn-ai btn-secondary" data-id="${id}" data-title="${task.title}" style="margin-top: 5px; width: 100%;">🤖 Сгенерировать план</button>` : ''}
-                `;
-                colPlanned.appendChild(card);
-            } else if (task.status === 'in_progress') {
-                buttons = `<button class="btn-complete" data-id="${id}" style="margin-top: 10px; width: 100%;">Завершить</button>`;
-                colProgress.appendChild(card);
-            } else if (task.status === 'completed') {
-                card.style.opacity = '0.6';
-                colDone.appendChild(card);
-            }
-
-            card.innerHTML = `
-                <strong>${task.title}</strong><br>
-                <small>Приоритет: ${task.priority}</small>
-                ${aiPlanBlock}
-                ${buttons}
-            `;
-        });
-
-        document.querySelectorAll('.btn-take').forEach(btn => btn.onclick = async (e) => await updateDoc(doc(db, "maintenanceTasks", e.target.dataset.id), { status: 'in_progress' }));
-        document.querySelectorAll('.btn-complete').forEach(btn => btn.onclick = async (e) => await updateDoc(doc(db, "maintenanceTasks", e.target.dataset.id), { status: 'completed', completedAt: serverTimestamp() }));
+        const target = document.getElementById("repair-list-container") || document.body;
         
-        document.querySelectorAll('.btn-ai').forEach(btn => {
-            btn.onclick = async (e) => {
-                const taskId = e.target.dataset.id;
-                const title = e.target.dataset.title;
-                e.target.textContent = '⏳ Генерация...';
-                e.target.disabled = true;
-                
-                const plan = await generateRepairPlan(title, "Оборудование локомотива");
-                if (plan) {
-                    await updateDoc(doc(db, "maintenanceTasks", taskId), { aiPlan: plan });
-                } else {
-                    e.target.textContent = '🤖 Сгенерировать план';
-                    e.target.disabled = false;
-                }
-            };
+        let casesHtml = `
+            <div class="card" style="margin-top: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3>Ремонтные случаи и история</h3>
+                    <button id="btn-new-repair" class="btn btn-primary">Новое поступление</button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Локомотив</th>
+                                <th>Дата поступления</th>
+                                <th>Жалоба / Неисправность</th>
+                                <th>Стадия ремонта</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="repair-table-body">
+        `;
+
+        if (snapshot.exists()) {
+            const cases = snapshot.val();
+            Object.keys(cases).forEach(key => {
+                const item = cases[key];
+                casesHtml += `
+                    <tr>
+                        <td><strong>№ ${item.locomotive_id || "—"}</strong></td>
+                        <td>${item.date ? new Date(item.date).toLocaleDateString("ru-RU") : "—"}</td>
+                        <td>${item.complaint || item.description || "Плановый осмотр"}</td>
+                        <td><span class="badge warning">${item.status || "Принят в депо"}</span></td>
+                        <td><button class="btn btn-secondary" style="padding: 4px 8px; font-size: 12px;" onclick="window.location.href='repair.html?id=${key}'">Открыть</button></td>
+                    </tr>
+                `;
+            });
+        } else {
+            casesHtml += `<tr><td colspan="5" style="text-align: center; opacity: 0.7;">Активных ремонтных случаев нет</td></tr>`;
+        }
+
+        casesHtml += `</tbody></table></div></div>`;
+        
+        if (!document.getElementById("repair-list-card")) {
+            const wrapper = document.createElement("div");
+            wrapper.id = "repair-list-card";
+            wrapper.innerHTML = casesHtml;
+            target.appendChild(wrapper);
+        }
+
+        setupNewRepairHandler();
+
+    } catch (e) {
+        console.error("Ошибка загрузки ремонтных случаев:", e);
+    }
+}
+
+function setupNewRepairHandler() {
+    const btnNew = document.getElementById("btn-new-repair");
+    if (!btnNew) return;
+
+    btnNew.onclick = async () => {
+        const locoId = prompt("Введите номер локомотива для создания ремонтного случая:");
+        if (!locoId) return;
+
+        const complaint = prompt("Укажите заявленную неисправность или причину обращения:");
+        
+        const casesRef = ref(db, "maintenanceCases");
+        await push(casesRef, {
+            locomotive_id: locoId,
+            complaint: complaint || "Внеплановый осмотр",
+            status: "Принят в депо",
+            date: Date.now(),
+            stage: "Приемка"
         });
-    });
-};
+
+        alert("Ремонтный случай успешно создан!");
+        location.reload();
+    };
+}
