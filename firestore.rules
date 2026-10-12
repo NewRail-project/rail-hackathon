@@ -2,8 +2,9 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     // ДЕМО: вход отключён, доступ открыт. Для реальной работы вернуть Auth и роли.
+    // ВНИМАНИЕ: settings/ai хранит ключ ИИ и читается любым посетителем сайта (клиентский вызов Groq).
     match /{col}/{id} {
-      allow read, write: if col in ['locomotives','maintenanceCases','maintenanceTasks','maintenanceTypes','maintenanceRecords','equipment','mileageReadings','statusHistory','aiAnalyses'];
+      allow read, write: if col in ['locomotives','maintenanceCases','maintenanceTasks','maintenanceTypes','maintenanceRecords','equipment','mileageReadings','statusHistory','aiAnalyses','photos','settings'];
     }
   }
 }
