@@ -129,7 +129,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
   .brand-controls > #aiKey { grid-column: 1 / -1; }
 
   .train-nav { margin-bottom: 18px; padding: 12px 0; }
-  .train-nav .wagon { height: 40px; padding: 0 16px 18px; font-size: 12px; }
+  .train-nav .wagon { height: 46px; padding: 0 16px 18px; font-size: 12px; }
   .train-head { width: 76px; height: 40px; }
 
   .card { padding: 16px; }
@@ -142,5 +142,5 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 
 html{filter:brightness(.97)}
 
-.train-loco{display:block;height:58px;width:auto;flex:none;align-self:flex-end;margin-right:-4px}
-@media (max-width:600px){.train-loco{height:40px}}
+.train-loco{display:block;height:62px;width:auto;flex:none;align-self:flex-end;margin-right:-4px}
+@media (max-width:600px){.train-loco{height:46px}}
