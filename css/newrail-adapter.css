@@ -3,7 +3,7 @@
   margin: 0;
   overflow: visible;
   border-radius: 20px;
-  background: rgba(207,164,66,.15);
+  background: rgba(224,169,46,.15);
 }
 .progress:not(.badge) { display: block; }
 
@@ -25,7 +25,7 @@
   color: var(--text);
   font-size: 13px;
   z-index: 2000;
-  box-shadow: 0 8px 30px rgba(0,0,0,.5), 0 0 14px rgba(127,176,196,.25);
+  box-shadow: 0 8px 30px rgba(0,0,0,.5), 0 0 14px rgba(111,182,204,.25);
   transition: opacity .3s, top .3s;
   pointer-events: none;
 }
@@ -34,7 +34,7 @@
 
 input.invalid, select.invalid, textarea.invalid {
   border-color: var(--danger);
-  box-shadow: 0 0 0 3px rgba(217,114,106,.15);
+  box-shadow: 0 0 0 3px rgba(208,88,77,.15);
 }
 input[type="checkbox"], input[type="radio"] { width: auto; }
 
@@ -46,7 +46,7 @@ input[type="checkbox"], input[type="radio"] { width: auto; }
   border-top: 3px solid var(--kz8-yellow);
   border-radius: 12px;
   padding: 24px;
-  box-shadow: 0 4px 24px rgba(110,150,194,.12);
+  box-shadow: 0 4px 24px rgba(91,143,199,.12);
 }
 .auth-card h2 { margin-bottom: 16px; color: var(--kz8-blue-bright); font-size: 18px; }
 .field { margin-bottom: 14px; }
@@ -92,7 +92,7 @@ input[type="checkbox"], input[type="radio"] { width: auto; }
   background: #fff;
   border-radius: 12px;
   border: 3px solid var(--kz8-yellow);
-  box-shadow: 0 0 20px rgba(207,164,66,.25);
+  box-shadow: 0 0 20px rgba(224,169,46,.25);
 }
 .qr-box img, .qr-box canvas { display: block; }
 .qr-wrap { text-align: center; }
@@ -169,3 +169,4 @@ select.inl{width:auto;padding:6px 8px;font-size:12px}.nd{color:var(--text-dim)}.
 .brand-controls{gap:8px}
 .org-input{width:150px;padding:6px 10px}
 .ctl{padding:8px 12px}
+.brand-logo{flex:none}
