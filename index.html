@@ -3,434 +3,164 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>NewRail</title>
-<style>
-:root{--kz8-blue:#1e5b9e;--kz8-blue-bright:#2a7fd4;--kz8-blue-dark:#143c6b;--kz8-cyan:#5bc8e8;--kz8-cyan-dim:#3a9fbf;--kz8-yellow:#f5c518;--kz8-yellow-dim:#c9a010;--kz8-black:#0a0d12;--kz8-dark:#0d1520;--kz8-panel:#1a2332;--bg:var(--kz8-dark);--panel:var(--kz8-panel);--panel-2:#202b3d;--border:#2a3a52;--border-2:#3a4553;--text:#e8eef5;--text-dim:#8a9bb0;--accent:var(--kz8-blue-bright);--success:#27ae60;--danger:#e74c3c}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;background-image:radial-gradient(circle at 20% 10%,rgba(42,127,212,.10),transparent 40%),radial-gradient(circle at 80% 90%,rgba(245,197,24,.05),transparent 40%)}
-.hud-wrapper{max-width:1400px;margin:0 auto;padding:20px;min-height:100vh;display:flex;flex-direction:column}
-.brand-header{padding:20px 0;border-bottom:1px solid var(--border);margin-bottom:16px}
-.brand-header h1{font-size:22px;font-weight:600;letter-spacing:.5px;color:var(--text)}
-.brand-header h1::before{content:'●';color:var(--kz8-yellow);margin-right:10px;animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-main{flex:1}
-.train-nav{position:relative;display:flex;align-items:flex-end;gap:0;padding:14px 0 16px;border-bottom:1px solid var(--border);margin-bottom:24px}
-.train-nav .wagon{position:relative;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;height:46px;padding:0 22px;padding-bottom:22px;margin-right:-8px;color:var(--kz8-black);background:linear-gradient(180deg,#f0f4f8 0%,#e2e8ef 46%,var(--kz8-yellow) 46%,var(--kz8-yellow) 54%,#2a7fd4 54%,#1e5b9e 76%,#143c6b 100%);border:1px solid #0b2038;font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;text-decoration:none;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 50%,calc(100% - 10px) 100%,0 100%);transition:all .25s ease;cursor:pointer;z-index:1;line-height:1}
-.train-nav .wagon:hover{filter:brightness(1.15);transform:translateY(-2px);z-index:3}
-.train-nav .wagon.active{filter:brightness(1.2) drop-shadow(0 0 12px rgba(245,197,24,.7));z-index:4;color:#0a1626;background:linear-gradient(180deg,var(--kz8-yellow) 0%,var(--kz8-yellow-dim) 100%)}
-.train-head{position:relative;flex-shrink:0;width:120px;height:46px;margin-left:6px;clip-path:polygon(0% 20%,14% 4%,58% 4%,82% 8%,96% 32%,100% 55%,100% 100%,0% 100%);background:linear-gradient(180deg,#f0f4f8 0%,#e2e8ef 46%,var(--kz8-yellow) 46%,var(--kz8-yellow) 54%,var(--kz8-cyan) 54%,var(--kz8-cyan-dim) 68%,var(--kz8-blue) 68%,var(--kz8-blue-dark) 100%);filter:drop-shadow(0 3px 6px rgba(0,0,0,.55));z-index:2}
-.card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px;box-shadow:0 4px 24px rgba(42,127,212,.06)}
-.card h2{font-size:16px;font-weight:600;margin-bottom:8px;color:var(--text)}
-.card .subtitle{font-size:12px;color:var(--text-dim);margin-bottom:16px}
-.grid{display:grid;gap:16px}
-.grid-2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
-.grid-3{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
-.grid-4{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
-.stat{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px;position:relative;overflow:hidden}
-.stat::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--kz8-yellow)}
-.stat .label{font-size:12px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
-.stat .value{font-size:28px;font-weight:700;color:var(--text)}
-.stat .value.accent{color:var(--kz8-blue-bright)}.stat .value.green{color:var(--success)}.stat .value.yellow{color:var(--kz8-yellow)}.stat .value.red{color:var(--danger)}
-button,.btn{position:relative;background:linear-gradient(180deg,#2a3a52 0%,#1a2332 100%);color:var(--text);border:1px solid var(--border-2);border-bottom:2px solid #5a6575;padding:12px 22px;border-radius:6px;font-size:13px;font-weight:500;letter-spacing:.3px;text-transform:uppercase;cursor:pointer;transition:all .15s ease;font-family:inherit;text-decoration:none;display:inline-block;line-height:1}
-button::before,.btn::before{content:'';position:absolute;top:1px;left:1px;right:1px;height:40%;background:linear-gradient(180deg,rgba(255,255,255,.08),transparent);border-radius:5px 5px 0 0;pointer-events:none}
-button:hover,.btn:hover{border-color:var(--kz8-blue-bright);box-shadow:0 0 12px rgba(42,127,212,.35)}
-button:active,.btn:active{transform:translateY(1px);border-bottom-width:1px;box-shadow:inset 0 2px 6px rgba(0,0,0,.5)}
-button.primary,.btn.primary{background:linear-gradient(180deg,var(--kz8-blue-bright) 0%,var(--kz8-blue) 100%);color:#fff;border-color:var(--kz8-blue-bright);border-bottom:2px solid #4a9eff;font-weight:600;text-shadow:0 1px 2px rgba(0,0,0,.3)}
-button.primary:hover{box-shadow:0 0 20px rgba(42,127,212,.6)}
-button.danger,.btn.danger{background:linear-gradient(180deg,#c0392b 0%,#96281b 100%);color:#fff;border-color:#e74c3c;border-bottom:2px solid #e74c3c}
-button[data-action]{padding:8px 14px;font-size:11px;border-radius:4px;letter-spacing:.5px;background:linear-gradient(180deg,#253044 0%,#1a2332 100%)}
-button[data-action=start]{border-color:var(--kz8-yellow);color:var(--kz8-yellow)}
-button[data-action=done]{border-color:var(--success);color:var(--success)}
-button[data-action=remove]{border-color:var(--danger);color:var(--danger)}
-input,select,textarea{background:var(--bg);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:14px;width:100%;font-family:inherit;transition:border .2s,box-shadow .2s}
-input:focus,select:focus,textarea:focus{outline:none;border-color:var(--kz8-blue-bright);box-shadow:0 0 0 3px rgba(42,127,212,.15)}
-.badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
-.badge.waiting{background:rgba(231,76,60,.15);color:var(--danger)}.badge.progress{background:rgba(245,197,24,.15);color:var(--kz8-yellow)}.badge.done{background:rgba(39,174,96,.15);color:var(--success)}
-.kanban{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-.kanban-col{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px;min-height:400px}
-.kanban-col h3{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border)}
-.kanban-item{background:var(--panel-2);border:1px solid var(--border-2);border-radius:8px;padding:12px;margin-bottom:10px;transition:all .2s}
-.kanban-item:hover{border-color:var(--kz8-blue-bright)}
-.kanban-item .id{font-weight:600;color:var(--kz8-blue-bright);font-size:14px}
-.kanban-item .meta{font-size:12px;color:var(--text-dim);margin-top:6px}
-.progress{height:6px;background:var(--bg);border-radius:3px;overflow:hidden;margin:8px 0}
-.progress-fill{height:100%;background:linear-gradient(90deg,var(--kz8-blue-bright),var(--kz8-yellow));transition:width .5s}
-.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:1000;align-items:center;justify-content:center;padding:20px}
-.modal.open{display:flex}
-.modal-content{background:var(--panel);border:1px solid var(--border-2);border-radius:12px;padding:24px;max-width:480px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.5)}
-.modal-content h2{margin-bottom:16px;color:var(--kz8-blue-bright)}
-table{width:100%;border-collapse:collapse;font-size:14px}
-th,td{text-align:left;padding:12px;border-bottom:1px solid var(--border)}
-th{color:var(--text-dim);font-weight:500;font-size:12px;text-transform:uppercase;letter-spacing:.5px}
-tr:hover td{background:var(--panel-2)}
-.empty{text-align:center;padding:40px;color:var(--text-dim);font-size:14px}
-.loader{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--kz8-blue-bright);border-radius:50%;animation:spin .8s linear infinite;margin:40px auto}
-@keyframes spin{to{transform:rotate(360deg)}}
-.indicator{width:8px;height:8px;border-radius:50%;background:var(--kz8-blue-bright);box-shadow:0 0 8px var(--kz8-blue-bright);display:inline-block;margin-right:8px;animation:blink 1.5s infinite}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
-@media(max-width:768px){.kanban{grid-template-columns:1fr}.hud-wrapper{padding:12px}.train-head{width:90px}.train-nav .wagon{padding:0 14px 22px;font-size:12px}}
-
-/* =====================================================
-   NewRail · адаптер KZ8A-интерфейса под новую логику
-   Подключать ПОСЛЕ старого style.css
-   ===================================================== */
-
-/* ---------- 1. Конфликт имён: .progress (полоса) vs .badge.progress ---------- */
-.badge.progress {
-  height: auto;
-  margin: 0;
-  overflow: visible;
-  border-radius: 20px;
-  background: rgba(245,197,24,.15);
-}
-.progress:not(.badge) { display: block; }
-
-/* ---------- 2. Модалки: toggleModal() ставит style.display = flex/none ---------- */
-.modal { display: none; }               /* inline flex из JS перебивает */
-.modal[style*="flex"] { animation: fadeIn .2s ease; }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-/* ---------- 3. Toast: showToast() ---------- */
-.toast {
-  position: fixed;
-  top: 14px;
-  left: 50%;
-  transform: translateX(-50%);
-  max-width: calc(100vw - 24px);
-  padding: 10px 18px;
-  background: rgba(13,21,32,.95);
-  border: 1px solid var(--kz8-cyan);
-  border-left: 4px solid var(--kz8-yellow);
-  border-radius: 8px;
-  color: var(--text);
-  font-size: 13px;
-  z-index: 2000;                        /* выше .modal (1000) */
-  box-shadow: 0 8px 30px rgba(0,0,0,.5), 0 0 14px rgba(91,200,232,.25);
-  transition: opacity .3s, top .3s;
-  pointer-events: none;
-}
-.toast.success { border-color: var(--success); }
-.toast.error   { border-color: var(--danger);  }
-
-/* ---------- 4. Валидация: validateForm() ---------- */
-input.invalid, select.invalid, textarea.invalid {
-  border-color: var(--danger);
-  box-shadow: 0 0 0 3px rgba(231,76,60,.15);
-}
-input[type="checkbox"], input[type="radio"] { width: auto; }
-
-/* ---------- 5. Авторизация: devLogin / devPass / devSubmit / devLogout ---------- */
-.auth-card {
-  max-width: 380px;
-  margin: 60px auto;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-top: 3px solid var(--kz8-yellow);
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 4px 24px rgba(42,127,212,.12);
-}
-.auth-card h2 { margin-bottom: 16px; color: var(--kz8-blue-bright); font-size: 18px; }
-.field { margin-bottom: 14px; }
-.field label {
-  display: block;
-  margin-bottom: 6px;
-  font-size: 12px;
-  color: var(--text-dim);
-  text-transform: uppercase;
-  letter-spacing: .5px;
-}
-.auth-card button { width: 100%; }
-.user-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  background: var(--panel-2);
-  border: 1px solid var(--border-2);
-  border-radius: 20px;
-  font-size: 12px;
-  color: var(--text-dim);
-}
-.brand-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-
-/* ---------- 6. Поиск и фильтры: searchData() / filterData() ---------- */
-.toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 16px;
-}
-.toolbar input[type="search"], .toolbar input[type="text"] { flex: 1 1 220px; width: auto; }
-.toolbar select { flex: 0 1 180px; width: auto; }
-
-/* ---------- 7. Realtime-списки: listenRecords() ---------- */
-.kanban-item { animation: slideIn .25s ease; }
-@keyframes slideIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
-.kanban-item .actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
-.live { color: var(--success); font-size: 12px; }
-
-/* ---------- 8. QR-код (qrcodejs, фон #fff) ---------- */
-.qr-box {
-  display: inline-block;
-  padding: 12px;
-  background: #fff;                      /* совпадает с colorLight */
-  border-radius: 12px;
-  border: 3px solid var(--kz8-yellow);
-  box-shadow: 0 0 20px rgba(245,197,24,.25);
-}
-.qr-box img, .qr-box canvas { display: block; }
-.qr-wrap { text-align: center; }
-.qr-wrap .code {
-  margin-top: 12px;
-  font-size: 22px;
-  font-weight: 700;
-  letter-spacing: 3px;
-  color: var(--kz8-yellow);
-}
-
-/* ---------- 9. Мобильная адаптация ---------- */
-@media (max-width: 768px) {
-  .auth-card { margin: 24px auto; }
-  .toolbar select { flex: 1 1 100%; }
-  .train-nav { overflow-x: auto; scrollbar-width: none; }
-  .train-nav::-webkit-scrollbar { display: none; }
-}
-
-</style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<title>NewRail · Эксплуатация / Депо</title>
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/newrail-adapter.css">
 </head>
 <body>
 <div class="hud-wrapper">
-  <header class="brand-header">
-    <h1>NewRail</h1>
-    <div id="userBox" style="display:none">
-      <span class="user-chip" id="userEmail"></span>
-      <button id="devLogout">Выйти</button>
-    </div>
-  </header>
+  <header class="brand-header"><h1>NewRail</h1><span class="live" id="live">подключение…</span></header>
 
-  <!-- ВХОД -->
-  <section id="authView" class="auth-card">
-    <h2>Вход</h2>
-    <div class="field"><label for="devLogin">Логин</label><input id="devLogin" autocomplete="username"></div>
-    <div class="field"><label for="devPass">Пароль</label><input id="devPass" type="password" autocomplete="current-password"></div>
-    <button class="primary" id="devSubmit">Войти</button>
-    <div id="status" style="margin-top:12px;font-size:11px;color:var(--text-dim);word-break:break-all"></div>
-  </section>
+  <nav class="train-nav">
+    <a class="wagon active" data-tab="ops">Эксплуатация</a>
+    <a class="wagon" data-tab="depot">Депо</a>
+    <div class="train-head"></div>
+  </nav>
 
-  <!-- ПРИЛОЖЕНИЕ -->
-  <main id="appView" style="display:none">
-    <nav class="train-nav">
-      <a class="wagon active">Задачи</a>
-      <a class="wagon" id="qrBtn">QR</a>
-      <div class="train-head"></div>
-    </nav>
-
+  <!-- ЭКСПЛУАТАЦИЯ -->
+  <main id="ops">
     <div class="grid grid-3" style="margin-bottom:16px">
-      <div class="stat"><div class="label">Ожидают</div><div class="value red" id="cWaiting">0</div></div>
-      <div class="stat"><div class="label">В работе</div><div class="value yellow" id="cProgress">0</div></div>
-      <div class="stat"><div class="label">Готово</div><div class="value green" id="cDone">0</div></div>
+      <div class="stat"><div class="label">Всего профилей</div><div class="value accent" id="oAll">0</div></div>
+      <div class="stat"><div class="label">В депо</div><div class="value yellow" id="oDepot">0</div></div>
+      <div class="stat"><div class="label">Вернулись из ремонта</div><div class="value green" id="oDone">0</div></div>
     </div>
-
     <div class="toolbar">
-      <input type="search" id="search" placeholder="Поиск…">
-      <select id="filter">
-        <option value="">Все статусы</option>
-        <option value="waiting">Ожидают</option>
-        <option value="progress">В работе</option>
-        <option value="done">Готово</option>
-      </select>
-      <button class="primary" id="addBtn">+ Добавить</button>
+      <input type="search" id="search" placeholder="Поиск по номеру или серии…">
+      <button class="primary" id="addBtn">+ Профиль локомотива</button>
     </div>
+    <div class="card"><h2>Парк эксплуатации</h2><div class="subtitle">Создайте профиль и передайте локомотив в депо</div><div id="opsList"></div></div>
+  </main>
 
-    <div class="kanban">
-      <div class="kanban-col"><h3><span class="indicator"></span>Ожидают</h3><div id="col-waiting"></div></div>
-      <div class="kanban-col"><h3>В работе</h3><div id="col-progress"></div></div>
-      <div class="kanban-col"><h3>Готово</h3><div id="col-done"></div></div>
+  <!-- ДЕПО -->
+  <main id="depot" style="display:none">
+    <div class="grid grid-4" style="margin-bottom:16px">
+      <div class="stat"><div class="label">Поступили</div><div class="value red" id="dSent">0</div></div>
+      <div class="stat"><div class="label">Приняты</div><div class="value accent" id="dAcc">0</div></div>
+      <div class="stat"><div class="label">В ремонте</div><div class="value yellow" id="dRep">0</div></div>
+      <div class="stat"><div class="label">Готовы</div><div class="value green" id="dDone">0</div></div>
+    </div>
+    <div class="kanban" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">
+      <div class="kanban-col"><h3>Поступили</h3><div id="col-sent"></div></div>
+      <div class="kanban-col"><h3>Приняты</h3><div id="col-accepted"></div></div>
+      <div class="kanban-col"><h3>В ремонте</h3><div id="col-repair"></div></div>
+      <div class="kanban-col"><h3>Готовы к выдаче</h3><div id="col-done"></div></div>
     </div>
   </main>
 </div>
 
-<!-- МОДАЛКА: добавить -->
 <div class="modal" id="addModal">
   <form class="modal-content" id="addForm" novalidate>
-    <h2>Новая запись</h2>
-    <div class="field"><label>Название</label><input name="title" required></div>
-    <div class="field"><label>Описание</label><input name="meta" required></div>
-    <div style="display:flex;gap:10px">
-      <button type="submit" class="primary">Сохранить</button>
-      <button type="button" id="addCancel">Отмена</button>
-    </div>
+    <h2>Новый профиль локомотива</h2>
+    <div class="field"><label>Номер</label><input name="number" required placeholder="ВЛ80С-1428"></div>
+    <div class="field"><label>Серия</label>
+      <select name="series"><option>ВЛ80С</option><option>2ЭС5К</option><option>ЭП1</option><option>ТЭП70БС</option><option>2ТЭ116У</option></select></div>
+    <div class="field"><label>Тип</label>
+      <select name="type"><option>Грузовой</option><option>Пассажирский</option><option>Маневровый</option></select></div>
+    <div class="field"><label>Пробег, км</label><input name="mileage" type="number" min="0" value="0"></div>
+    <div class="field"><label>Замечания / причина заезда</label><input name="defect" placeholder="Нагрев МОП, плановое ТО…"></div>
+    <div style="display:flex;gap:10px"><button type="submit" class="primary">Создать</button><button type="button" id="addCancel">Отмена</button></div>
   </form>
-</div>
-
-<!-- МОДАЛКА: QR -->
-<div class="modal" id="qrModal">
-  <div class="modal-content qr-wrap">
-    <h2>Присоединиться</h2>
-    <div class="qr-box" id="qr"></div>
-    <div class="code" id="qrCode"></div>
-    <button id="qrClose" style="margin-top:16px">Закрыть</button>
-  </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
-import { initializeAuth, indexedDBLocalPersistence, browserLocalPersistence, browserSessionPersistence, inMemoryPersistence, signInWithEmailAndPassword, signOut, onAuthStateChanged }
-  from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot }
   from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
 
-/* ===== ВСТАВЬ СВОЙ КОНФИГ FIREBASE ===== */
-const firebaseConfig = {
+const db = getFirestore(initializeApp({
   apiKey: "AIzaSyDoD1pNfA_cfiqCUwAKT7XHfNLOsedmhdU",
   authDomain: "rail-hackathon-db.firebaseapp.com",
   projectId: "rail-hackathon-db",
   storageBucket: "rail-hackathon-db.firebasestorage.app",
   messagingSenderId: "257494735942",
   appId: "1:257494735942:web:1aa10dcb7f25c83fcf3e47"
-};
-const app = initializeApp(firebaseConfig);
-const auth = initializeAuth(app, { persistence: [indexedDBLocalPersistence, browserLocalPersistence, browserSessionPersistence, inMemoryPersistence] });
-const db = getFirestore(app);
-const COL = "tasks";
+}));
+const COL = "locomotives";
 const $ = id => document.getElementById(id);
-
-/* ===== УТИЛИТЫ ===== */
-const toggleModal = (id, state) => { const m = $(id); if (m) m.style.display = state ? 'flex' : 'none'; };
-const searchData = (data, q, keys) => { q = q.toLowerCase(); return data.filter(i => keys.some(k => String(i[k] ?? '').toLowerCase().includes(q))); };
-const filterData = (data, key, value) => data.filter(i => i[key] === value);
-const validateForm = form => {
-  let ok = true;
-  form.querySelectorAll('input[required]').forEach(i => {
-    const v = i.value.trim() !== '';
-    i.classList.toggle('invalid', !v);
-    if (!v) ok = false;
-  });
-  return ok;
-};
-function showToast(text, type = '') {
-  const t = document.createElement('div');
-  t.className = 'toast ' + type; t.textContent = text;
-  document.body.appendChild(t);
-  setTimeout(() => { t.style.opacity = '0'; t.style.top = '4px'; setTimeout(() => t.remove(), 300); }, 2600);
-}
-let actx = null;
-function beep(freq, dur, type, vol) {
-  try {
-    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
-    const o = actx.createOscillator(), g = actx.createGain();
-    o.type = type || 'sine'; o.frequency.value = freq; g.gain.value = vol || 0.15;
-    o.connect(g); g.connect(actx.destination); o.start();
-    g.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + dur);
-    o.stop(actx.currentTime + dur);
-  } catch (e) {}
-}
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-
-/* ===== АВТОРИЗАЦИЯ ===== */
-const setStatus = t => { const s = $('status'); if (s) s.textContent = t; };
-window.addEventListener('error', ev => { setStatus('JS: ' + ev.message); });
-window.addEventListener('unhandledrejection', ev => { setStatus('Promise: ' + (ev.reason && (ev.reason.code || ev.reason.message))); });
-setStatus('Firebase: ' + firebaseConfig.projectId + ' · готов');
-
-const setStatus = t => { const s = $('status'); if (s) s.textContent = t; };
-window.addEventListener('error', ev => setStatus('JS: ' + ev.message));
-window.addEventListener('unhandledrejection', ev => setStatus('Promise: ' + (ev.reason && (ev.reason.code || ev.reason.message))));
-setStatus('Firebase: ' + firebaseConfig.projectId + ' · готов');
-$('devSubmit').onclick = async () => {
-  const btn = $('devSubmit');
-  const login = $('devLogin').value.trim().toLowerCase();
-  const email = login ? (login.includes('@') ? login : login + '@corequiz.local') : 'core.singl@corequiz.local';
-  btn.disabled = true; btn.textContent = 'Вход…'; setStatus('Входим как ' + email);
-  const timeout = new Promise((_, rej) => setTimeout(() => rej({ code: 'timeout: нет ответа от Firebase 15 c' }), 15000));
-  try {
-    await Promise.race([signInWithEmailAndPassword(auth, email, $('devPass').value.trim()), timeout]);
-    beep(880, .15); showToast('Вход выполнен', 'success'); setStatus('OK');
-  } catch (err) {
-    beep(200, .3, 'square');
-    const m = err.code || err.message;
-    showToast('Ошибка: ' + m, 'error'); setStatus('Ошибка: ' + m); console.error(err);
-  } finally { btn.disabled = false; btn.textContent = 'Войти'; }
+const toast = (t, type = '') => {
+  const e = document.createElement('div'); e.className = 'toast ' + type; e.textContent = t; document.body.appendChild(e);
+  setTimeout(() => { e.style.opacity = 0; setTimeout(() => e.remove(), 300); }, 2600);
 };
-$('devLogout').onclick = () => signOut(auth).then(() => showToast('Вы вышли'));
+// new = профиль создан (эксплуатация) · sent → accepted → repair → done (депо)
+const ST = { new:['Профиль создан','waiting'], sent:['Передан в депо','waiting'], accepted:['Принят депо','progress'], repair:['В ремонте','progress'], done:['Ремонт завершён','done'] };
+const badge = s => `<span class="badge ${ST[s]?.[1] || 'waiting'}">${ST[s]?.[0] || s}</span>`;
+const upd = (id, data) => updateDoc(doc(db, COL, id), { ...data, updatedAt: Date.now() }).catch(e => toast('Ошибка: ' + e.code, 'error'));
 
-let unsub = null, items = [];
-onAuthStateChanged(auth, user => {
-  $('authView').style.display = user ? 'none' : '';
-  $('appView').style.display = user ? '' : 'none';
-  $('userBox').style.display = user ? '' : 'none';
-  if (user) {
-    $('userEmail').textContent = user.email.split('@')[0];
-    unsub = onSnapshot(collection(db, COL), snap => {
-      items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      render();
-    }, err => { showToast('Firestore: ' + err.code, 'error'); setStatus('Firestore: ' + err.code + ' — ' + err.message); });
-  } else if (unsub) { unsub(); unsub = null; items = []; }
-});
+/* ---------- вкладки ---------- */
+function tab(name) {
+  $('ops').style.display = name === 'ops' ? '' : 'none';
+  $('depot').style.display = name === 'depot' ? '' : 'none';
+  document.querySelectorAll('.wagon').forEach(w => w.classList.toggle('active', w.dataset.tab === name));
+  history.replaceState(null, '', '#' + name);
+}
+document.querySelectorAll('.wagon').forEach(w => w.onclick = () => tab(w.dataset.tab));
+tab(location.hash === '#depot' ? 'depot' : 'ops');
 
-/* ===== РЕНДЕР ===== */
-const NEXT = { waiting: 'start', progress: 'done' };
-const LABEL = { start: 'В работу', done: 'Готово' };
+/* ---------- данные ---------- */
+let items = [];
+onSnapshot(collection(db, COL), snap => {
+  items = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  $('live').textContent = '● онлайн'; render();
+}, err => { $('live').textContent = 'ошибка: ' + err.code; toast('Firestore: ' + err.code, 'error'); });
+
+const card = (i, actions) => `<div class="kanban-item">
+  <div class="id">${esc(i.number)}</div>
+  <div class="meta">${esc(i.series)} · ${esc(i.type)} · ${Number(i.mileage || 0).toLocaleString('ru-RU')} км</div>
+  ${i.defect ? `<div class="meta">Замечание: ${esc(i.defect)}</div>` : ''}
+  ${i.work ? `<div class="meta">Работы: ${esc(i.work)}</div>` : ''}
+  <div class="meta">${badge(i.status)}</div>
+  <div class="actions">${actions}</div></div>`;
+const btn = (act, id, text) => `<button data-act="${act}" data-id="${id}">${text}</button>`;
+
 function render() {
-  let list = items;
-  const q = $('search').value.trim(), f = $('filter').value;
-  if (q) list = searchData(list, q, ['title', 'meta']);
-  if (f) list = filterData(list, 'status', f);
-  for (const s of ['waiting', 'progress', 'done']) {
-    const rows = filterData(list, 'status', s);
-    $('col-' + s).innerHTML = rows.length ? rows.map(i => `
-      <div class="kanban-item">
-        <div class="id">${esc(i.title)}</div>
-        <div class="meta">${esc(i.meta)}</div>
-        <div class="actions">
-          ${NEXT[s] ? `<button data-action="${NEXT[s]}" data-id="${i.id}">${LABEL[NEXT[s]]}</button>` : ''}
-          <button data-action="remove" data-id="${i.id}">Удалить</button>
-        </div>
-      </div>`).join('') : '<div class="empty">Пусто</div>';
-  }
-  $('cWaiting').textContent = filterData(items, 'status', 'waiting').length;
-  $('cProgress').textContent = filterData(items, 'status', 'progress').length;
-  $('cDone').textContent = filterData(items, 'status', 'done').length;
+  const q = $('search').value.trim().toLowerCase();
+  const mine = items.filter(i => !q || `${i.number} ${i.series}`.toLowerCase().includes(q));
+  $('opsList').innerHTML = mine.length ? mine.map(i => card(i,
+    i.status === 'new' ? btn('send', i.id, 'Передать в депо') + btn('del', i.id, 'Удалить')
+    : i.status === 'done' ? btn('take', i.id, 'Принять из депо')
+    : '<span class="meta">Локомотив в депо</span>')).join('') : '<div class="empty">Профилей пока нет</div>';
+
+  const by = s => items.filter(i => i.status === s);
+  const acts = { sent: i => btn('accept', i.id, 'Принять'), accepted: i => btn('repair', i.id, 'В ремонт'),
+                 repair: i => btn('finish', i.id, 'Ремонт завершён'), done: () => '<span class="meta">Ждёт возврата в эксплуатацию</span>' };
+  for (const s of ['sent', 'accepted', 'repair', 'done'])
+    $('col-' + s).innerHTML = by(s).length ? by(s).map(i => card(i, acts[s](i))).join('') : '<div class="empty">Пусто</div>';
+
+  $('oAll').textContent = items.length;
+  $('oDepot').textContent = ['sent', 'accepted', 'repair'].reduce((n, s) => n + by(s).length, 0);
+  $('oDone').textContent = by('done').length;
+  $('dSent').textContent = by('sent').length; $('dAcc').textContent = by('accepted').length;
+  $('dRep').textContent = by('repair').length; $('dDone').textContent = by('done').length;
 }
 $('search').oninput = render;
-$('filter').onchange = render;
 
-$('appView').addEventListener('click', async e => {
-  const b = e.target.closest('button[data-action]');
-  if (!b) return;
-  const ref = doc(db, COL, b.dataset.id);
-  try {
-    if (b.dataset.action === 'start') await updateDoc(ref, { status: 'progress' });
-    if (b.dataset.action === 'done') { await updateDoc(ref, { status: 'done' }); beep(660, .15); }
-    if (b.dataset.action === 'remove') await deleteDoc(ref);
-  } catch (err) { showToast('Ошибка: ' + err.message, 'error'); }
+document.addEventListener('click', e => {
+  const b = e.target.closest('button[data-act]'); if (!b) return;
+  const id = b.dataset.id, act = b.dataset.act;
+  if (act === 'send') upd(id, { status: 'sent', sentAt: Date.now() });
+  if (act === 'accept') upd(id, { status: 'accepted', acceptedAt: Date.now() });
+  if (act === 'repair') { const w = prompt('Какие работы проводятся?', ''); if (w !== null) upd(id, { status: 'repair', work: w.trim() }); }
+  if (act === 'finish') upd(id, { status: 'done', finishedAt: Date.now() });
+  if (act === 'take') upd(id, { status: 'new', defect: '', work: '' });
+  if (act === 'del' && confirm('Удалить профиль?')) deleteDoc(doc(db, COL, id)).catch(e => toast('Ошибка: ' + e.code, 'error'));
 });
 
-/* ===== ДОБАВЛЕНИЕ ===== */
-$('addBtn').onclick = () => toggleModal('addModal', true);
-$('addCancel').onclick = () => toggleModal('addModal', false);
+/* ---------- создание профиля ---------- */
+const modal = s => $('addModal').style.display = s ? 'flex' : 'none';
+$('addBtn').onclick = () => modal(true);
+$('addCancel').onclick = () => modal(false);
 $('addForm').onsubmit = async e => {
   e.preventDefault();
-  if (!validateForm(e.target)) return;
-  const fd = new FormData(e.target);
+  const f = new FormData(e.target), num = f.get('number').trim();
+  e.target.number.classList.toggle('invalid', !num);
+  if (!num) return;
   try {
-    await addDoc(collection(db, COL), { title: fd.get('title').trim(), meta: fd.get('meta').trim(), status: 'waiting', createdAt: Date.now() });
-    e.target.reset(); toggleModal('addModal', false); showToast('Добавлено', 'success');
-  } catch (err) { showToast('Ошибка: ' + err.message, 'error'); }
+    await addDoc(collection(db, COL), { number: num, series: f.get('series'), type: f.get('type'),
+      mileage: Number(f.get('mileage')) || 0, defect: f.get('defect').trim(), status: 'new', createdAt: Date.now() });
+    e.target.reset(); modal(false); toast('Профиль создан', 'success');
+  } catch (err) { toast('Ошибка: ' + err.code, 'error'); }
 };
-
-/* ===== QR ===== */
-$('qrBtn').onclick = () => {
-  const code = 'SESSION_123';
-  $('qr').innerHTML = '';
-  new QRCode($('qr'), { text: location.origin + location.pathname + '#/join/' + code,
-    width: 150, height: 150, colorDark: "#0a1c2e", colorLight: "#ffffff" });
-  $('qrCode').textContent = code;
-  toggleModal('qrModal', true);
-};
-$('qrClose').onclick = () => toggleModal('qrModal', false);
 </script>
 </body>
 </html>
