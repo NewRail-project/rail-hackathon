@@ -216,6 +216,8 @@ input[type="checkbox"], input[type="radio"] { width: auto; }
     <div class="field"><label for="devLogin">Логин</label><input id="devLogin" autocomplete="username"></div>
     <div class="field"><label for="devPass">Пароль</label><input id="devPass" type="password" autocomplete="current-password"></div>
     <button class="primary" id="devSubmit">Войти</button>
+    <div id="status" style="margin-top:12px;font-size:11px;color:var(--text-dim);word-break:break-all"></div>
+    <div id="status" style="margin-top:12px;font-size:11px;color:var(--text-dim);word-break:break-all"></div>
   </section>
 
   <!-- ПРИЛОЖЕНИЕ -->
@@ -276,20 +278,22 @@ input[type="checkbox"], input[type="radio"] { width: auto; }
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+import { initializeAuth, indexedDBLocalPersistence, browserLocalPersistence, browserSessionPersistence, inMemoryPersistence, signInWithEmailAndPassword, signOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot }
   from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
 
 /* ===== ВСТАВЬ СВОЙ КОНФИГ FIREBASE ===== */
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyDoD1pNfA_cfiqCUwAKT7XHfNLOsedmhdU",
+  authDomain: "rail-hackathon-db.firebaseapp.com",
+  projectId: "rail-hackathon-db",
+  storageBucket: "rail-hackathon-db.firebasestorage.app",
+  messagingSenderId: "257494735942",
+  appId: "1:257494735942:web:1aa10dcb7f25c83fcf3e47"
 };
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
+const auth = initializeAuth(app, { persistence: [indexedDBLocalPersistence, browserLocalPersistence, browserSessionPersistence, inMemoryPersistence] });
 const db = getFirestore(app);
 const COL = "tasks";
 const $ = id => document.getElementById(id);
@@ -327,13 +331,29 @@ function beep(freq, dur, type, vol) {
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 /* ===== АВТОРИЗАЦИЯ ===== */
-$('devSubmit').onclick = () => {
-  if (firebaseConfig.apiKey === "YOUR_API_KEY") { showToast('Вставь свой firebaseConfig в index.html', 'error'); return; }
+const setStatus = t => { const s = $('status'); if (s) s.textContent = t; };
+window.addEventListener('error', ev => { setStatus('JS: ' + ev.message); });
+window.addEventListener('unhandledrejection', ev => { setStatus('Promise: ' + (ev.reason && (ev.reason.code || ev.reason.message))); });
+setStatus('Firebase: ' + firebaseConfig.projectId + ' · готов');
+
+const setStatus = t => { const s = $('status'); if (s) s.textContent = t; };
+window.addEventListener('error', ev => setStatus('JS: ' + ev.message));
+window.addEventListener('unhandledrejection', ev => setStatus('Promise: ' + (ev.reason && (ev.reason.code || ev.reason.message))));
+setStatus('Firebase: ' + firebaseConfig.projectId + ' · готов');
+$('devSubmit').onclick = async () => {
+  const btn = $('devSubmit');
   const login = $('devLogin').value.trim().toLowerCase();
   const email = login ? (login.includes('@') ? login : login + '@corequiz.local') : 'core.singl@corequiz.local';
-  signInWithEmailAndPassword(auth, email, $('devPass').value.trim())
-    .then(() => { beep(880, .15); showToast('Вход выполнен', 'success'); })
-    .catch(err => { beep(200, .3, 'square'); showToast('Ошибка: ' + (err.code || err.message), 'error'); console.error(err); });
+  btn.disabled = true; btn.textContent = 'Вход…'; setStatus('Входим как ' + email);
+  const timeout = new Promise((_, rej) => setTimeout(() => rej({ code: 'timeout: нет ответа от Firebase 15 c' }), 15000));
+  try {
+    await Promise.race([signInWithEmailAndPassword(auth, email, $('devPass').value.trim()), timeout]);
+    beep(880, .15); showToast('Вход выполнен', 'success'); setStatus('OK');
+  } catch (err) {
+    beep(200, .3, 'square');
+    const m = err.code || err.message;
+    showToast('Ошибка: ' + m, 'error'); setStatus('Ошибка: ' + m); console.error(err);
+  } finally { btn.disabled = false; btn.textContent = 'Войти'; }
 };
 $('devLogout').onclick = () => signOut(auth).then(() => showToast('Вы вышли'));
 
@@ -347,7 +367,7 @@ onAuthStateChanged(auth, user => {
     unsub = onSnapshot(collection(db, COL), snap => {
       items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       render();
-    });
+    }, err => { showToast('Firestore: ' + err.code, 'error'); setStatus('Firestore: ' + err.code + ' — ' + err.message); });
   } else if (unsub) { unsub(); unsub = null; items = []; }
 });
 
