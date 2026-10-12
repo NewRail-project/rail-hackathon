@@ -1,8 +1,9 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /locomotives/{id} {
-      allow read, write: if true;
+    // ДЕМО: вход отключён, доступ открыт. Для реальной работы вернуть Auth и роли.
+    match /{col}/{id} {
+      allow read, write: if col in ['locomotives','maintenanceCases','maintenanceTasks','maintenanceTypes','maintenanceRecords','equipment','mileageReadings','statusHistory','aiAnalyses'];
     }
   }
 }
