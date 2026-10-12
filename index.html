@@ -328,11 +328,12 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt
 
 /* ===== АВТОРИЗАЦИЯ ===== */
 $('devSubmit').onclick = () => {
-  const login = $('devLogin').value.trim();
-  const email = login ? (login.includes('@') ? login.toLowerCase() : login.toLowerCase() + '@corequiz.local') : 'core.singl@corequiz.local';
+  if (firebaseConfig.apiKey === "YOUR_API_KEY") { showToast('Вставь свой firebaseConfig в index.html', 'error'); return; }
+  const login = $('devLogin').value.trim().toLowerCase();
+  const email = login ? (login.includes('@') ? login : login + '@corequiz.local') : 'core.singl@corequiz.local';
   signInWithEmailAndPassword(auth, email, $('devPass').value.trim())
     .then(() => { beep(880, .15); showToast('Вход выполнен', 'success'); })
-    .catch(err => { beep(200, .3, 'square'); showToast(err.code || 'Ошибка входа', 'error'); });
+    .catch(err => { beep(200, .3, 'square'); showToast('Ошибка: ' + (err.code || err.message), 'error'); console.error(err); });
 };
 $('devLogout').onclick = () => signOut(auth).then(() => showToast('Вы вышли'));
 
