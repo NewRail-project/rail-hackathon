@@ -9,12 +9,86 @@
 h3.sec{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin:18px 0 8px}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}.kv{font-size:13px;margin:4px 0}.kv b{color:var(--text-dim);font-weight:500}
 select.inl{width:auto;padding:6px 8px;font-size:12px}.nd{color:var(--text-dim)}.warn{color:var(--kz8-yellow);font-size:12px}
+
+/* ============================================================
+   СЕМАФОР — вставка от ассистента
+   ============================================================ */
+.semaphore {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  align-self: stretch;
+  margin-left: 8px;
+}
+.sem-signals { display: flex; gap: 8px; }
+.sem-lamp {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: 3px solid #14171c;
+  background: radial-gradient(circle at 40% 40%, #ff5a45, #a01300 70%);
+  box-shadow: 0 0 10px rgba(255,74,58,.85), 0 0 22px rgba(255,74,58,.45), inset 0 0 4px rgba(0,0,0,.6);
+  animation: semBlink 1.6s steps(1, end) infinite;
+}
+@keyframes semBlink {
+  0%, 55%   { opacity: 1; }
+  56%, 100% { opacity: .22; }
+}
+.sem-bracket {
+  width: 52px; height: 4px;
+  background: linear-gradient(180deg, #3a3f46, #14171c);
+  border-radius: 2px;
+  margin-top: 6px;
+}
+.sem-buttons { display: flex; gap: 4px; margin-top: 10px; }
+.sem-btn {
+  background: linear-gradient(180deg, #1a2332, #10141c);
+  color: var(--text, #e8eef5);
+  border: 1px solid var(--border-2, #3a4553);
+  border-radius: 4px;
+  font-size: 10px; font-weight: 700; letter-spacing: .5px;
+  text-transform: uppercase;
+  padding: 5px 8px; cursor: pointer;
+  transition: all .15s; font-family: inherit; white-space: nowrap;
+}
+.sem-btn:hover {
+  border-color: var(--kz8-yellow, #f5c518);
+  color: var(--kz8-yellow, #f5c518);
+  box-shadow: 0 0 8px rgba(245,197,24,.4);
+}
+.sem-btn:active { transform: translateY(1px); }
+.sem-mast {
+  flex: 1; width: 3px; min-height: 20px;
+  margin-top: 6px; margin-bottom: -1px;
+  background: linear-gradient(180deg, #3a3f46, #14171c);
+  border-radius: 2px 2px 0 0;
+}
+.brand-header { align-items: stretch; min-height: 130px; }
+.brand-header > .row { align-items: flex-start; }
 </style></head><body><div class="hud-wrapper">
-<header class="brand-header"><h1>NewRail</h1><div class="row" style="gap:8px">
-<span class="live" id="live">…</span>
-<select id="role" class="inl"><option value="cust">Заказчик</option><option value="depot">Депо</option></select>
-<input id="org" placeholder="Моя организация" style="width:150px;padding:6px 10px">
-<button id="aiKey" style="padding:8px 12px;display:none">ИИ-ключ</button></div></header>
+<header class="brand-header">
+  <h1>LOCO PREDICT</h1>
+  <div class="row" style="gap:8px">
+    <span class="live" id="live">…</span>
+    <select id="role" class="inl"><option value="cust">Заказчик</option><option value="depot">Депо</option></select>
+    <input id="org" placeholder="Моя организация" style="width:150px;padding:6px 10px">
+    <button id="aiKey" style="padding:8px 12px;display:none">ИИ-ключ</button>
+
+    <!-- СЕМАФОР -->
+    <div class="semaphore" aria-hidden="true">
+      <div class="sem-signals">
+        <span class="sem-lamp red"></span>
+        <span class="sem-lamp red"></span>
+      </div>
+      <div class="sem-bracket"></div>
+      <div class="sem-buttons">
+        <button class="sem-btn" type="button" data-sem="depot">Депо</button>
+        <button class="sem-btn" type="button" data-sem="org">Организация</button>
+      </div>
+      <div class="sem-mast"></div>
+    </div>
+  </div>
+</header>
 <nav class="train-nav"><a class="wagon active" data-a="home">Локомотивы</a><div class="train-head"></div></nav>
 <main id="view"></main></div>
 <input type="file" id="photoIn" accept="image/*" multiple hidden>
@@ -38,7 +112,6 @@ const EQC={unknown:'unk',ok:'done',fixed:'done',check:'progress',wait:'progress'
 const BAD=['check','defect','repair','inrepair','wait'];
 const TO=[1,2,3,4,5,6,7,8].map(n=>'ТО-'+n);
 const SVC=[['','Не указано'],...TO.map(t=>[t,t]),['Текущий ремонт','Текущий ремонт'],['Капитальный ремонт','Капитальный ремонт'],['Осмотр','Осмотр']];
-/* Перечень узлов: f = 'e' только электровозы, 'd' только тепловозы */
 const NODES=[
 {g:'Ходовая часть',f:'',items:[['wheel','Колёсные пары'],['axlebox','Буксовые узлы'],['spring','Рессорное подвешивание'],['bogie','Рама тележки'],['gear','Тяговый редуктор'],['mab','Моторно-осевые подшипники'],['coupler','Автосцепное устройство']]},
 {g:'Тяговый привод и электрооборудование',f:'',items:[['tm','Тяговые двигатели'],['contactors','Силовые контакторы и реверсор'],['resist','Пусковые и тормозные резисторы'],['battery','Аккумуляторная батарея'],['control','Система управления и блоки'],['cabling','Силовая проводка и кабели']]},
@@ -50,7 +123,7 @@ const NODES=[
 const NMAP={},NIDX={};let _i=0;NODES.forEach(g=>g.items.forEach(([k,n])=>{NMAP[k]={k,n,g:g.g};NIDX[k]=_i++}));
 const hideGroup=(g,t)=>(g.f==='e'&&t==='Тепловоз')||(g.f==='d'&&t==='Электровоз');
 const nodesFor=t=>NODES.filter(g=>!hideGroup(g,t)).flatMap(g=>g.items.map(([k,n])=>[g.g,k,n]));
-const AI_MODEL='llama-3.3-70b-versatile'; /* бесплатная модель Groq, выбор модели убран */
+const AI_MODEL='llama-3.3-70b-versatile';
 
 /* ---------- собственные всплывающие элементы ---------- */
 let POP=null;
@@ -89,7 +162,7 @@ function enhanceDates(root){root.querySelectorAll('input[type=date]:not([data-dp
   draw();openPop(w,el)}})}
 const enhance=root=>{enhanceSelects(root);enhanceDates(root)};
 
-/* ---------- диалоги вместо prompt/confirm ---------- */
+/* ---------- диалоги ---------- */
 function nodePicker(name,sel=[],type=''){return`<div class="npick">${NODES.map(g=>`<div class="ng" data-for="${g.f}"${hideGroup(g,type)?' hidden':''}><div class="ng-t">${esc(g.g)}${g.f==='e'?' · электровозы':g.f==='d'?' · тепловозы':''}</div><div class="ng-c">${g.items.map(([k,n])=>`<label class="nchip"><input type="checkbox" name="${name}" value="${k}" ${sel.includes(k)?'checked':''}><span>${esc(n)}</span></label>`).join('')}</div></div>`).join('')}</div>`}
 const pickedNodes=(root,name)=>[...root.querySelectorAll(`.ng:not([hidden]) input[name="${name}"]:checked`)].map(i=>i.value);
 function fieldHTML(f){const v=f.value??'';let c;
@@ -179,7 +252,6 @@ async function ensureNodes(id,type,sel=[],by='',o={}){
   for(const [g,k,name] of nodesFor(type2)){const e=have.get(k),pick=sel.includes(k),h={from:e?e.state:'unknown',to,ts:now(),reason,by};
    if(!e){b.set(doc(collection(db,'equipment')),{locoId:id,key:k,group:g,name,state:pick?to:'unknown',history:pick?[h]:[],createdAt:now()});n++}
    else if(pick&&okFrom(e.state)){b.update(doc(db,'equipment',e.id),{state:to,history:arrayUnion(h)});n++}}
-  /* выбранные узлы, которые не входят в перечень для типа (например, при смене типа) */
   if(n)await b.commit();return n}catch(e){err(e);return 0}}
 const eqRow=(q,dep)=>{const svc=[q.svcCode,q.svcDate,q.svcMileage!=null&&q.svcMileage!==''?km(q.svcMileage):''].filter(Boolean).join(' · '),h=(q.history||[]),lh=h[h.length-1];
  return`<div class="nrow"><div><div class="nname">${esc(q.name)}</div><div class="meta">Последнее обслуживание: ${svc?esc(svc):'<span class="nd">нет данных</span>'}</div>${q.note?`<div class="meta">Примечание: ${esc(q.note)}</div>`:''}${lh?`<div class="meta">Изменений состояния: ${h.length} · последнее: ${esc(lh.reason)} (${fmt(lh.ts)})</div>`:''}</div><div class="nact"><span class="badge ${EQC[q.state]||'unk'}">${EQ[q.state]||'—'}</span>${dep?`<button data-a="eqe" data-id="${q.id}">Изменить</button>`:''}</div></div>`};
@@ -261,8 +333,8 @@ function caseBody(c,l,dep){
 function aiBlock(a){const r=a.result||{},L=x=>(x||[]).map(v=>`<li>${esc(txt(v))}</li>`).join('');
  return`<div class="kanban-item"><div class="meta">${fmt(a.ts)} · ${esc(a.model)} · требует подтверждения специалиста</div><p>${esc(r.summary)}</p>${r.findings?.length?'<b>Выводы</b><ul>'+L(r.findings)+'</ul>':''}${r.missingData?.length?'<b>Недостающие данные</b><ul>'+L(r.missingData)+'</ul>':''}<b>Рекомендуемые проверки</b>${(r.recommendedChecks||[]).map((x,k)=>`<div class="kv">• ${esc(x.title)} <span class="meta">[${esc(x.priority||'')}] ${esc(x.basis||x.description||'')}</span> <button data-a="topl" data-id="${a.id}" data-i="${k}" style="padding:4px 8px">В план</button></div>`).join('')||'<div class="nd">нет</div>'}${r.limitations?`<div class="meta">Ограничения: ${esc(r.limitations)}</div>`:''}</div>`}
 
-/* ---------- стадии ремонта ---------- */
-const SIDE=['disassembly','repair','assembly','adjust']; /* на этих стадиях можно уйти в ожидание деталей */
+/* ---------- стадии ---------- */
+const SIDE=['disassembly','repair','assembly','adjust'];
 const nexts=c=>{const s=c.stage;if(['issued','cancelled'].includes(s))return[];if(s==='paused'||s==='parts')return[c.prevStage||'repair'];
  const n=ORDER[ORDER.indexOf(s)+1],r=n?[n]:[];if(SIDE.includes(s))r.push('parts');if(s==='check')r.push('repair');if(s==='testing')r.push('adjust');if(s==='defectation')r.push('diagnostics');return r};
 function guard(c,to){const T=D.tasks.filter(t=>t.caseId===c.id);if(to==='ready'&&!(c.planApproved&&T.length))return'Нужны утверждённый план и хотя бы одна задача';if(['customer','done'].includes(to)&&T.some(t=>t.status!=='done'))return'Есть незакрытые задачи';return null}
@@ -272,7 +344,7 @@ async function move(c,to,comment='',extra={}){const g=guard(c,to);if(g)return to
  await upd('maintenanceCases',c.id,d);await add('statusHistory',{caseId:c.id,from:c.stage,to,ts:now(),comment,by:'депо (демо)'})}
 const curCase=()=>locoCases(S.id).find(x=>x.id===S.cid)||activeCase(S.id)||locoCases(S.id)[0];
 
-/* ---------- ИИ (Groq, бесплатная модель; ключ хранится в Firestore: settings/ai) ---------- */
+/* ---------- ИИ ---------- */
 async function runAI(c,l){if(!AIKEY)return toast('ИИ-ключ не задан — нажмите «ИИ-ключ» в шапке','error');
  const url='https://api.groq.com/openai/v1/chat/completions',model=AI_MODEL;
  const SYS='Ты помощник мастера депо. Отвечай ТОЛЬКО JSON-объектом с полями: summary(строка), findings[], missingData[], recommendedChecks[{title,description,basis,priority:"low|medium|high",requiresApproval:true}], recommendedMaintenance[{title,basis}], relatedEquipment[], reasoning, limitations, requiresHumanApproval:true. Используй только переданные данные. Не придумывай нормативы, периодичность ТО и значения. Заявленные заказчиком неисправности не считай подтверждёнными. Если данных нет — напиши об этом в missingData.';
@@ -326,4 +398,26 @@ document.addEventListener('click',async e=>{const b=e.target.closest('[data-a]')
 $('aiKey').onclick=async()=>{const v=await dlg({title:'Ключ ИИ (Groq)',sub:'Ключ сохраняется в Firebase (Firestore: settings/ai). Используется бесплатная модель '+AI_MODEL+'.',fields:[{name:'k',label:'API-ключ Groq',type:'password',ph:AIKEY?'Ключ уже сохранён — введите новый или оставьте пустым, чтобы удалить':'gsk_…'}],ok:'Сохранить'});if(!v)return;
  try{if(v.k)await setDoc(doc(db,'settings','ai'),{key:v.k,updatedAt:now()});else await deleteDoc(doc(db,'settings','ai'));toast(v.k?'Ключ сохранён в Firebase':'Ключ удалён','success')}catch(e){err(e)}};
 const q=new URLSearchParams(location.search).get('loco');if(q)openLoco(q);else render();
+
+/* ============================================================
+   Семафор: клики по кнопкам Депо / Организация
+   ============================================================ */
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('.sem-btn');
+  if (!b) return;
+  e.preventDefault();
+  const kind = b.dataset.sem;
+  if (kind === 'depot') {
+    const sel = document.getElementById('role');
+    if (sel) { sel.value = 'depot'; sel.dispatchEvent(new Event('change', { bubbles: true })); }
+    toast('Режим: Депо', 'success');
+  } else if (kind === 'org') {
+    const inp = document.getElementById('org');
+    if (inp) {
+      inp.focus();
+      inp.select?.();
+      toast('Введите название вашей организации в поле выше', 'info');
+    }
+  }
+}, true);
 </script></body></html>
