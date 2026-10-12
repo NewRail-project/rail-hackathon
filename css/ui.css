@@ -141,3 +141,6 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 }
 
 html{filter:brightness(.97)}
+
+.train-loco{display:block;height:58px;width:auto;flex:none;align-self:flex-end;margin-right:-4px}
+@media (max-width:600px){.train-loco{height:40px}}
