@@ -329,10 +329,10 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt
 /* ===== АВТОРИЗАЦИЯ ===== */
 $('devSubmit').onclick = () => {
   const login = $('devLogin').value.trim();
-  const email = login ? login.toLowerCase() + '@corequiz.local' : 'core.singl@corequiz.local';
+  const email = login ? (login.includes('@') ? login.toLowerCase() : login.toLowerCase() + '@corequiz.local') : 'core.singl@corequiz.local';
   signInWithEmailAndPassword(auth, email, $('devPass').value.trim())
     .then(() => { beep(880, .15); showToast('Вход выполнен', 'success'); })
-    .catch(() => { beep(200, .3, 'square'); showToast('Неверный логин или пароль', 'error'); });
+    .catch(err => { beep(200, .3, 'square'); showToast(err.code || 'Ошибка входа', 'error'); });
 };
 $('devLogout').onclick = () => signOut(auth).then(() => showToast('Вы вышли'));
 
