@@ -9,7 +9,7 @@
   margin: 0;
   overflow: visible;
   border-radius: 20px;
-  background: rgba(220,178,58,.15);
+  background: rgba(245,197,24,.15);
 }
 .progress:not(.badge) { display: block; }
 
@@ -33,7 +33,7 @@
   color: var(--text);
   font-size: 13px;
   z-index: 2000;                        /* выше .modal (1000) */
-  box-shadow: 0 8px 30px rgba(0,0,0,.5), 0 0 14px rgba(88,181,210,.25);
+  box-shadow: 0 8px 30px rgba(0,0,0,.5), 0 0 14px rgba(91,200,232,.25);
   transition: opacity .3s, top .3s;
   pointer-events: none;
 }
@@ -43,7 +43,7 @@
 /* ---------- 4. Валидация: validateForm() ---------- */
 input.invalid, select.invalid, textarea.invalid {
   border-color: var(--danger);
-  box-shadow: 0 0 0 3px rgba(210,78,65,.15);
+  box-shadow: 0 0 0 3px rgba(231,76,60,.15);
 }
 input[type="checkbox"], input[type="radio"] { width: auto; }
 
@@ -56,7 +56,7 @@ input[type="checkbox"], input[type="radio"] { width: auto; }
   border-top: 3px solid var(--kz8-yellow);
   border-radius: 12px;
   padding: 24px;
-  box-shadow: 0 4px 24px rgba(43,117,192,.12);
+  box-shadow: 0 4px 24px rgba(42,127,212,.12);
 }
 .auth-card h2 { margin-bottom: 16px; color: var(--kz8-blue-bright); font-size: 18px; }
 .field { margin-bottom: 14px; }
@@ -105,7 +105,7 @@ input[type="checkbox"], input[type="radio"] { width: auto; }
   background: #fff;                      /* совпадает с colorLight */
   border-radius: 12px;
   border: 3px solid var(--kz8-yellow);
-  box-shadow: 0 0 20px rgba(220,178,58,.25);
+  box-shadow: 0 0 20px rgba(245,197,24,.25);
 }
 .qr-box img, .qr-box canvas { display: block; }
 .qr-wrap { text-align: center; }
