@@ -2,71 +2,170 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEWRAIL | Панель управления</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>LOCO PREDICT</title>
     <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        :root {
+            --bg: #0b0f19; --panel: #131a2a; --card-bg: #1a2332;
+            --border: #2a3a52; --border-2: #3a4b66;
+            --text: #e2e8f0; --text-dim: #94a3b8;
+            --primary: #3b82f6; --primary-hover: #2563eb;
+            --success: #10b981; --danger: #ef4444; --kz8-yellow: #f59e0b;
+            --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        body { background-color: var(--bg); color: var(--text); font-family: var(--font-main); margin: 0; padding: 0; line-height: 1.5; }
+        input, textarea { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 10px 14px; font-size: 14px; border-radius: 8px; width: 100%; box-sizing: border-box; transition: all 0.2s; }
+        input:focus, textarea:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); }
+        select { appearance: none; -webkit-appearance: none; background-color: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 10px 36px 10px 14px; font-size: 14px; border-radius: 8px; width: 100%; box-sizing: border-box; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; background-size: 16px; }
+        button { background: var(--card-bg); color: var(--text); border: 1px solid var(--border); padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+        button:hover { background: var(--border); }
+        button.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+        button.primary:hover { background: var(--primary-hover); }
+        .card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .kanban-item { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-bottom: 12px; transition: transform 0.2s; }
+        .kanban-item:hover { transform: translateY(-2px); border-color: var(--border-2); }
+        .stages { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
+        .chip { font-size: 12px; padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border-2); color: var(--text-dim); background: var(--bg); }
+        .chip.on { background: rgba(245, 158, 11, 0.1); color: var(--kz8-yellow); border-color: var(--kz8-yellow); font-weight: 600; }
+        .chip.past { color: var(--success); border-color: var(--success); background: rgba(16, 185, 129, 0.05); }
+        .badge { font-size: 11px; padding: 3px 8px; border-radius: 6px; font-weight: 600; text-transform: uppercase; }
+        .badge.progress { background: rgba(59, 130, 246, 0.15); color: var(--primary); }
+        .badge.done { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+        .badge.waiting { background: rgba(148, 163, 184, 0.15); color: var(--text-dim); }
+        h2 { font-size: 20px; margin: 0 0 16px 0; font-weight: 600; color: #fff; }
+        h3.sec { font-size: 12px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text-dim); margin: 24px 0 12px; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+        .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+        .kv { font-size: 14px; margin: 8px 0; padding: 8px 12px; background: rgba(255,255,255,0.02); border-radius: 6px; border-left: 3px solid var(--border-2); }
+        .kv b { color: var(--text-dim); font-weight: 500; display: inline-block; min-width: 140px; }
+        select.inl { width: auto; padding: 6px 30px 6px 12px; font-size: 13px; background-color: var(--card-bg); border-color: var(--border-2); }
+        .nd { color: var(--text-dim); font-style: italic; font-size: 13px; }
+        .warn { color: var(--kz8-yellow); font-size: 13px; padding: 10px; background: rgba(245, 158, 11, 0.1); border-radius: 6px; border: 1px solid rgba(245, 158, 11, 0.2); }
+        .meta { color: var(--text-dim); font-size: 12px; margin-top: 6px; }
+        .empty { text-align: center; padding: 40px 20px; color: var(--text-dim); background: var(--panel); border: 1px dashed var(--border); border-radius: 12px; }
+        .grid { display: grid; gap: 16px; } .grid-2 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+        .field { display: flex; flex-direction: column; gap: 6px; } .field label { font-size: 13px; color: var(--text-dim); font-weight: 500; }
+        .progress { height: 6px; background: var(--bg); border-radius: 3px; overflow: hidden; margin: 16px 0 8px; border: 1px solid var(--border); }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary), #60a5fa); border-radius: 3px; transition: width 0.5s ease-out; }
+        .brand-header { position: relative; min-height: 90px; padding: 20px 30px; border-bottom: 1px solid var(--border); background: var(--panel); display: flex; align-items: center; justify-content: space-between; }
+        .brand-header h1 { margin: 0; font-size: 24px; font-weight: 800; letter-spacing: 1px; color: #fff; }
+        .live { color: var(--success); font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; margin-left: 20px; }
+        .header-controls { display: flex; gap: 15px; align-items: center; }
+        .train-nav { display: flex; gap: 20px; padding: 15px 30px; background: var(--bg); border-bottom: 1px solid var(--border); }
+        .train-nav a { color: var(--text-dim); text-decoration: none; font-size: 14px; font-weight: 600; cursor: pointer; }
+        .train-nav a:hover, .train-nav a.active { color: var(--primary); }
+        main#view { max-width: 1000px; margin: 30px auto; padding: 0 20px; }
+        .toolbar { display: flex; gap: 12px; margin-bottom: 20px; } .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+        .toast { position: fixed; bottom: 20px; right: 20px; background: var(--panel); border: 1px solid var(--border-2); color: #fff; padding: 12px 20px; border-radius: 8px; font-size: 14px; z-index: 1000; transition: opacity 0.3s; }
+        .toast.success { border-left: 4px solid var(--success); } .toast.error { border-left: 4px solid var(--danger); }
+    </style>
 </head>
 <body>
-    <header class="navbar">
-        <h1 class="logo">NEWRAIL</h1>
-        <nav class="nav-links">
-            <a href="index.html" class="active">Дашборд</a>
-            <button id="devLogout">Выход</button>
-        </nav>
-    </header>
+<header class="brand-header">
+  <div style="display: flex; align-items: center;">
+    <h1>LOCO PREDICT</h1>
+    <span class="live" id="live">…</span>
+  </div>
+  <div class="header-controls">
+    <select id="role" class="inl"><option value="cust">Заказчик</option><option value="depot">Депо</option></select>
+    <input id="org" placeholder="Моя организация" style="width:160px; padding: 6px 12px;">
+  </div>
+</header>
+<nav class="train-nav"><a class="wagon active" data-a="home">Локомотивы</a></nav>
+<main id="view"></main>
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+import {getFirestore,collection,addDoc,updateDoc,doc,onSnapshot,query,where,arrayUnion} from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
+const db=getFirestore(initializeApp({apiKey:"AIzaSyDoD1pNfA_cfiqCUwAKT7XHfNLOsedmhdU",authDomain:"rail-hackathon-db.firebaseapp.com",projectId:"rail-hackathon-db",storageBucket:"rail-hackathon-db.firebasestorage.app",messagingSenderId:"257494735942",appId:"1:257494735942:web:1aa10dcb7f25c83fcf3e47"}));
+const $=i=>document.getElementById(i),now=()=>Date.now();
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const nd=v=>v||v===0?esc(v):'<span class="nd">Нет данных</span>',fmt=t=>t?new Date(t).toLocaleString('ru-RU'):'—',txt=x=>typeof x==='string'?x:JSON.stringify(x);
+const toast=(t,k='')=>{const e=document.createElement('div');e.className='toast '+k;e.textContent=t;document.body.appendChild(e);setTimeout(()=>{e.style.opacity=0;setTimeout(()=>e.remove(),300)},3000)};
+const err=e=>toast('Ошибка: '+(e.code||e.message),'error');
+const add=(n,d)=>addDoc(collection(db,n),d).catch(err),upd=(n,id,d)=>updateDoc(doc(db,n,id),d).catch(err);
+const ST={created:'Заявка создана',waiting:'Ожидает приёмки',accepted:'Локомотив принят',inspection:'Первичный осмотр',diagnostics:'Диагностика',plan:'Согласование плана работ',ready:'Ожидает начала ремонта',repair:'В ремонте',parts:'Ожидает детали/материалы',check:'Контрольная проверка',customer:'Ожидает приёмки заказчиком',done:'Ремонт завершён',issued:'Локомотив выдан',paused:'Приостановлен',cancelled:'Отменён'};
+const ORDER=['created','waiting','accepted','inspection','diagnostics','plan','ready','repair','check','customer','done','issued'];
+const EQ={unknown:'Состояние не установлено',ok:'Норма по результатам проверки',check:'Требуется доп. проверка',defect:'Обнаружен дефект',repair:'Требуется ремонт',inrepair:'Ремонт выполняется',wait:'Ожидает контрольной проверки',fixed:'Восстановлено по результатам проверки'};
+const TO=[1,2,3,4,5,6,7,8].map(n=>'ТО-'+n);
+const D={locos:[],cases:[],rules:[],equipment:[],miles:[],tos:[],tasks:[],hist:[],ai:[]};
+let S={v:'list',id:null,cid:null,wc:null},locoSubs=[],caseSubs=[],lastSync=null;
+const watch=(name,key,f,val)=>onSnapshot(f?query(collection(db,name),where(f,'==',val)):collection(db,name),s=>{D[key]=s.docs.map(d=>({id:d.id,...d.data()}));lastSync=now();render()},e=>{$('live').textContent='ошибка: '+e.code;toast(name+': '+e.code,'error')});
+watch('locomotives','locos');watch('maintenanceCases','cases');watch('maintenanceTypes','rules');
+const isDepot=()=>$('role').value==='depot',myOrg=()=>$('org').value.trim();
+const byNew=a=>[...a].sort((x,y)=>(y.createdAt||y.ts||0)-(x.createdAt||x.ts||0));
+const locoCases=id=>byNew(D.cases.filter(c=>c.locoId===id)),activeCase=id=>locoCases(id).find(c=>!['issued','cancelled'].includes(c.stage));
+try{$('org').value=localStorage.org\vert{}\vert{}'';$('role').value=localStorage.role||'cust'}catch(e){}
+$('org').oninput=()=>{try{localStorage.org=$('org').value}catch(e){}render()};$('role').onchange=()=>{try{localStorage.role=$('role').value}catch(e){}render()};
+window.addEventListener('online',render);window.addEventListener('offline',render);
 
-    <main class="dashboard-container">
-        <section class="stats-panel">
-            <div class="stat-card" id="stat-total">Всего в парке: <span>0</span></div>
-            <div class="stat-card" id="stat-ok">В норме: <span>0</span></div>
-            <div class="stat-card" id="stat-warning">Требуют проверки: <span>0</span></div>
-            <div class="stat-card" id="stat-critical">Критичные: <span>0</span></div>
-        </section>
+function render(){
+ $('live').textContent=(navigator.onLine?'● онлайн':'○ нет связи')+(lastSync?' · '+new Date(lastSync).toLocaleTimeString('ru-RU'):'');
+ if(S.v==='form')return;
+ $('view').innerHTML=S.v==='loco'?passport():list();
+ if(S.v==='loco'&&$('qr')&&window.QRCode){$('qr').innerHTML='';new QRCode($('qr'),{text:location.origin+location.pathname+'?loco='+S.id,width:120,height:120})}
+}
+function status(l){const c=activeCase(l.id);return c?`<span class="badge progress">${ST[c.stage]}</span>`:'<span class="badge done">В эксплуатации</span>'}
+function list(){
+ const dep=isDepot(),org=myOrg(),ls=byNew(D.locos.filter(l=>dep||(org&&l.org===org)));
+ let h=`<div class="toolbar"><button class="primary" data-a="new">+ Сдать локомотив в ремонт</button>${dep?'<button data-a="seed">Демо-данные</button>':''}</div>`;
+ if(!dep&&!org)h+='<div class="empty">Введите название вашей организации в шапке</div>';
+ else h+=ls.length?ls.map(l=>`<div class="kanban-item"><div class="row"><div class="id">${esc(l.number)} · ${esc(l.series)}</div>${status(l)}</div><div class="meta">${esc(l.org)} · ${Number(l.mileage||0).toLocaleString('ru-RU')} км</div><div class="actions"><button data-a="open" data-id="${l.id}">Паспорт</button></div></div>`).join(''):'<div class="empty">Локомотивов пока нет</div>';
+ return h}
 
-        <section class="loco-registry">
-            <div class="registry-header">
-                <h2>Реестр локомотивов</h2>
-                <button id="btn-add-loco" class="btn-primary">+ Добавить локомотив</button>
-            </div>
-            <div class="table-container">
-                <table id="loco-table">
-                    <thead>
-                        <tr>
-                            <th>Номер</th>
-                            <th>Серия и Тип</th>
-                            <th>Питание</th>
-                            <th>Статус</th>
-                            <th>Действие</th>
-                        </tr>
-                    </thead>
-                    <tbody id="loco-table-body"></tbody>
-                </table>
-            </div>
-        </section>
-    </main>
+function openForm(){S.v='form';const dep=isDepot();
+ const FORM=[['Локомотив',[['number','Номер*'],['series','Серия и модель*'],['type','Тип',['','Электровоз','Тепловоз','Маневровый']],['factoryNo','Заводской номер'],['year','Год выпуска','number'],['depot','Депо приписки'],['mileage','Текущий пробег, км*','number'],['mileageDate','Дата подтверждения пробега','date'],['lastTO','Дата последнего ТО','date'],['lastTOType','Вид последнего ТО',['',...TO]],['prevRepair','Предыдущий ремонт']]],
+ ['Заказчик',[['org','Организация*'],['rep','ФИО представителя*'],['position','Должность'],['phone','Телефон','tel'],['email','E-mail','email']]],
+ ['Причина поступления',[['reason','Причина*',['','Плановое ТО','Обнаруженная неисправность','Внеплановый ремонт','Диагностическая проверка','Повторное обращение','Другая']],['description','Описание проблемы','area'],['symptoms','Симптомы','area'],['found','Когда обнаружена'],['conditions','При каких условиях проявляется'],['nodes','Предположительно затронутые узлы'],['prechecks','Проведённые проверки'],['notes','Дополнительные замечания']]],
+ ['Состояние при сдаче',[['external','Внешнее состояние','area'],['known','Известные неисправности','area'],['complete','Комплектность'],['handover','Замечания при передаче']]]];
+ $('view').innerHTML='<form id="intake" class="card" novalidate><h2>Сдать локомотив в ремонт</h2><div class="subtitle meta">Неизвестные данные оставьте пустыми</div>'+FORM.map(([t,fs])=>`<h3 class="sec">${t}</h3><div class="grid grid-2">`+fs.map(([n,l,k])=>`<div class="field"><label>${l}</label>`+(Array.isArray(k)?`<select name="${n}">${k.map(o=>`<option>${o}</option>`).join('')}</select>`:k==='area'?`<textarea name="${n}" rows="2"></textarea>`:`<input name="${n}" type="${k||'text'}" ${n==='org'&&!dep?`value="${esc(myOrg())}"`:''}>`)+'</div>').join('')+'</div>').join('')+'<div class="row" style="justify-content:flex-start; margin-top:20px;"><button class="primary">Зарегистрировать</button><button type="button" data-a="home">Отмена</button></div></form>';
+ $('intake').onsubmit=submitIntake}
+async function submitIntake(e){e.preventDefault();const f=Object.fromEntries(new FormData(e.target));
+ const miss=['number','series','mileage','org','rep','reason'].filter(k=>!String(f[k]||'').trim());
+ [...e.target.elements].forEach(i=>i.classList&&i.classList.toggle('invalid',miss.includes(i.name)));
+ if(miss.length)return toast('Заполните обязательные поля','error');
+ Object.keys(f).forEach(k=>f[k]=String(f[k]).trim());const km=Number(f.mileage)||0;let l=D.locos.find(x=>x.number===f.number&&x.org===f.org),id=l&&l.id,cm='по анкете';
+ if(!l){const r=await addDoc(collection(db,'locomotives'),{number:f.number,series:f.series,type:f.type,factoryNo:f.factoryNo,year:f.year,depot:f.depot,org:f.org,rep:f.rep,mileage:km,mileageDate:f.mileageDate,lastTO:f.lastTO,lastTOType:f.lastTOType,prevRepair:f.prevRepair,createdAt:now()}).catch(err);if(!r)return;id=r.id}
+ else await upd('locomotives',id,{mileage:km,mileageDate:f.mileageDate||l.mileageDate});
+ await add('mileageReadings',{locoId:id,value:km,date:f.mileageDate,ts:now(),source:'анкета заказчика',by:f.rep,comment:cm});
+ const n=D.cases.filter(c=>c.locoId===id).length+1,c=await addDoc(collection(db,'maintenanceCases'),{locoId:id,locoNumber:f.number,org:f.org,caseNo:n,reason:f.reason,intake:f,stage:'created',planApproved:false,createdAt:now(),updatedAt:now()}).catch(err);
+ if(c)await add('statusHistory',{caseId:c.id,from:'',to:'created',ts:now(),comment:'Анкета подтверждена',by:f.rep});
+ toast('Паспорт и ремонтный случай созданы','success');openLoco(id)}
 
-    <div id="add-loco-modal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <h3>Регистрация локомотива</h3>
-            <form id="add-loco-form" class="data-form">
-                <input type="text" id="loco-num" placeholder="Номер (напр. KZ8-002)" required>
-                <input type="text" id="loco-series" placeholder="Серия (напр. KZ8A)" required>
-                <input type="text" id="loco-type" placeholder="Тип (Грузовой/Пассажирский)" required>
-                <select id="loco-power" required>
-                    <option value="">Тип питания...</option>
-                    <option value="Переменный ток (25 кВ)">Переменный ток (25 кВ)</option>
-                    <option value="Постоянный ток (3 кВ)">Постоянный ток (3 кВ)</option>
-                    <option value="Дизель">Автономный (Дизель)</option>
-                </select>
-                <input type="text" id="loco-depot" placeholder="Депо приписки" required>
-                <label>Фотография локомотива:</label>
-                <input type="file" id="loco-photo" accept="image/*">
-                
-                <button type="submit" class="btn-primary">Сохранить в базу</button>
-                <button type="button" id="btn-close-modal">Отмена</button>
-            </form>
-        </div>
-    </div>
-    <script type="module" src="js/app.js"></script>
+function openLoco(id){locoSubs.forEach(u=>u());caseSubs.forEach(u=>u());caseSubs=[];Object.assign(D,{equipment:[],miles:[],tos:[],tasks:[],hist:[],ai:[]}); S={v:'loco',id,cid:null,wc:null};locoSubs=[watch('equipment','equipment','locoId',id),watch('mileageReadings','miles','locoId',id),watch('maintenanceRecords','tos','locoId',id)];render()}
+function ensureCase(c){if(c&&S.wc!==c.id){S.wc=c.id;caseSubs.forEach(u=>u());D.tasks=[];D.hist=[];D.ai=[];caseSubs=[watch('maintenanceTasks','tasks','caseId',c.id),watch('statusHistory','hist','caseId',c.id),watch('aiAnalyses','ai','caseId',c.id)]}}
+const kv=(l,v)=>`<div class="kv"><b>${l}:</b> ${nd(v)}</div>`;
+function passport(){
+ const l=D.locos.find(x=>x.id===S.id);if(!l)return'<div class="empty">Загрузка паспорта…</div>';
+ const dep=isDepot(), cs=locoCases(l.id), c=cs.find(x=>x.id===S.cid)||activeCase(l.id)||cs[0]; ensureCase(c);
+ const ms=byNew(D.miles), tos=byNew(D.tos), eq=byNew(D.equipment);
+ return`<div class="row"><button data-a="home">← К списку</button><span>${status(l)}</span></div>
+ <div class="card"><h2>Цифровой паспорт ${esc(l.number)}</h2><div class="row" style="align-items:flex-start"><div>${kv('Серия и модель',l.series)}${kv('Тип',l.type)}${kv('Организация',l.org)}</div><div><div id="qr"></div></div></div></div>
+ <div class="card"><h2>Техническое состояние</h2>${eq.map(q=>`<div class="kanban-item"><div class="row"><div class="id">${esc(q.name)}</div>${dep?`<select class="inl" data-a="eqs" data-id="${q.id}">${Object.entries(EQ).map(([k,v])=>`<option value="${k}" ${k===q.state?'selected':''}>${v}</option>`).join('')}</select>`:`<span class="badge progress">${EQ[q.state]||''}</span>`}</div></div>`).join('')||'<div class="empty">Узлы не внесены</div>'}${dep?'<div class="actions"><button data-a="eq">+ Узел</button></div>':''}</div>
+ <div class="card"><h2>Ремонты</h2><div class="actions">${cs.map(x=>`<button data-a="case" data-id="${x.id}" ${c&&x.id===c.id?'class="primary"':''}>№${x.caseNo} ·${ST[x.stage]}</button>`).join('')||'<span class="nd">Ремонтных случаев нет</span>'}</div>${c?caseBody(c,l,dep):''}</div>`}
+function caseBody(c,l,dep){
+ const T=D.tasks.filter(t=>t.caseId===c.id),done=T.filter(t=>t.status==='done').length,pct=T.length?Math.round(done/T.length*100):0,i=ORDER.indexOf(c.stage===('parts')?'repair':c.stage==='paused'?(c.prevStage||'created'):c.stage),it=c.intake||{},ai=byNew(D.ai)[0];
+ const chips=ORDER.map((s,k)=>`<span class="chip ${s===c.stage||(c.stage==='parts'&&s==='repair')?'on':k<i?'past':''}">${ST[s]}</span>`).join('');
+ return`<div class="stages">${chips}</div><div class="progress"><div class="progress-fill" style="width:${pct}%"></div></div><div class="meta">Задач: ${done} из ${T.length}</div>
+ ${kv('Причина обращения',c.reason)}
+ <h3 class="sec">Задачи</h3>${T.map(t=>`<div class="kanban-item"><div class="row"><div>${esc(t.title)}</div>${t.status==='done'?'<span class="badge done">выполнено</span>':dep?`<button data-a="tdone" data-id="${t.id}">Завершить</button>`:'<span class="badge waiting">ожидает</span>'}</div></div>`).join('')||'<div class="nd">Задач нет</div>'}
+ ${dep?`<h3 class="sec">Действия</h3><div class="actions">${nexts(c).map(s=>`<button class="primary" data-a="move" data-to="${s}">→ ${ST[s]}</button>`).join('')}<button data-a="task">+ Задача</button></div>`:''}`}
+const nexts=c=>{const s=c.stage;if(['issued','cancelled'].includes(s))return[];if(s==='paused')return[c.prevStage||'created'];if(s==='parts')return['repair'];if(s==='repair')return['check','parts'];if(s==='check')return['customer','repair'];const n=ORDER[ORDER.indexOf(s)+1];return n?[n]:[]};
+async function move(c,to,comment='',extra={}){const d={stage:to,updatedAt:now(),...extra}; await upd('maintenanceCases',c.id,d);await add('statusHistory',{caseId:c.id,from:c.stage,to,ts:now(),comment,by:'система'});}
+const curCase=()=>{return locoCases(S.id).find(x=>x.id===S.cid)||activeCase(S.id)||locoCases(S.id)[0]};
+async function seed(){const t=now(),r=await addDoc(collection(db,'locomotives'),{number:'ДЕМО-001',series:'Демо-серия',type:'Электровоз',org:'Демо-заказчик',rep:'Иванов И.И.',depot:'Главное депо',mileage:120000,createdAt:t}).catch(err);if(!r)return; await add('mileageReadings',{locoId:r.id,value:120000,ts:t,source:'демо',by:'система'}); const c=await addDoc(collection(db,'maintenanceCases'),{locoId:r.id,locoNumber:'ДЕМО-001',org:'Демо-заказчик',caseNo:1,reason:'Осмотр',intake:{},stage:'repair',planApproved:true,createdAt:t,updatedAt:t}).catch(err); for(const x of['Диагностика узла','Замена детали'])await add('maintenanceTasks',{caseId:c.id,title:x,status:x==='Диагностика узла'?'done':'todo',createdAt:t}); await add('equipment',{locoId:r.id,name:'Тяговый двигатель',state:'defect',history:[],createdAt:t});toast('Демо-данные созданы','success')}
+document.addEventListener('click',async e=>{const b=e.target.closest('[data-a]');if(!b||b.tagName==='SELECT')return;const a=b.dataset.a,dep=isDepot(),c=S.v==='loco'?curCase():null,l=D.locos.find(x=>x.id===S.id);
+ if(a==='home'){locoSubs.forEach(u=>u());caseSubs.forEach(u=>u());S={v:'list'};return render()}
+ if(a==='new')return openForm();if(a==='open')return openLoco(b.dataset.id);if(a==='seed')return seed();
+ if(a==='case'){S.cid=b.dataset.id;return render()}
+ if(!dep)return;
+ if(a==='eq'){const n=prompt('Узел:');if(n)await add('equipment',{locoId:l.id,name:n.trim(),state:'unknown',history:[],createdAt:now()})}
+ if(a==='task'&&c){const t=prompt('Задача:');if(t)await add('maintenanceTasks',{caseId:c.id,title:t.trim(),status:'todo',createdAt:now()})}
+ if(a==='tdone')await upd('maintenanceTasks',b.dataset.id,{status:'done',finishedAt:now()});
+ if(a==='move'&&c)await move(c,b.dataset.to);
+});
+document.addEventListener('change',async e=>{const s=e.target;if(s.dataset&&s.dataset.a==='eqs'){const q=D.equipment.find(x=>x.id===s.dataset.id); await upd('equipment',q.id,{state:s.value})}});
+const q=new URLSearchParams(location.search).get('loco');if(q)openLoco(q);else render();
+</script>
 </body>
 </html>
