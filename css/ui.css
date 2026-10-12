@@ -120,6 +120,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
   .brand-controls > .cs.inl { min-width: 0; width: 100%; }
   .org-input { width: 100%; }
   .semaphore { display: none; }
+  .brand-controls > #aiKey { grid-column: 1 / -1; }
 
   .train-nav { margin-bottom: 18px; padding: 12px 0; }
   .train-nav .wagon { height: 40px; padding: 0 16px 18px; font-size: 12px; }
