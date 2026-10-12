@@ -1,29 +1,33 @@
-import { initDashboard } from './modules/dashboard.js';
-import { initPassport } from './modules/locomotive-passport.js';
-import { initMaintenance } from './modules/maintenance.js';
-import { seedDatabase } from './demo/seed.js';
-import { checkAuth, logoutUser } from './auth.js';
+// =====================================================
+// js/app.js — Главный файл инициализации приложения и Firebase
+// =====================================================
 
-// Активация защиты
-checkAuth();
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+import { getDatabase } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
-// Обработка кнопки выхода
-const logoutBtn = document.getElementById('devLogout');
-if (logoutBtn) logoutBtn.onclick = logoutUser;
+// Конфигурация Firebase для проекта LOCO PREDICT
+const firebaseConfig = {
+    databaseURL: "https://rail-hackathon-default-rtdb.firebaseio.com/"
+};
 
-window.newrailSeed = seedDatabase;
+// Инициализация Firebase
+const app = initializeApp(firebaseConfig);
+export const db = getDatabase(app);
 
-document.addEventListener('DOMContentLoaded', () => {
-    const path = window.location.pathname;
-    
-    // Блокируем инициализацию модулей на странице логина
-    if (path.includes('login.html')) return;
-    
-    if (path.includes('locomotive.html')) {
-        initPassport();
-    } else if (path.includes('maintenance.html')) {
-        initMaintenance();
-    } else {
-        initDashboard();
-    }
+// Импорт модулей
+import { initLocomotivePassport } from "./modules/locomotive-passport.js";
+import { initMaintenanceModule } from "./modules/maintenance.js";
+import { initMaintenancePlanner } from "./modules/ai-planner.js";
+import { initDepotDashboard } from "./modules/dashboard.js";
+
+// Автоматический запуск модулей при загрузке страницы
+document.addEventListener("DOMContentLoaded", () => {
+    console.log("LOCO PREDICT: Система инициализирована");
+
+    // Инициализируем компоненты в зависимости от наличия контейнеров на странице
+    initLocomotivePassport();
+    initMaintenanceModule();
+    initMaintenancePlanner();
+    initDepotDashboard();
 });
+
