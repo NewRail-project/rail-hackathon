@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=resizes-content">
 <title>NewRail</title>
 <link rel="stylesheet" href="css/style.css?v=14"><link rel="stylesheet" href="css/newrail-adapter.css?v=14"><link rel="stylesheet" href="css/ui.css?v=14">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -318,6 +318,7 @@ document.addEventListener('click',async e=>{const b=e.target.closest('[data-a="l
  if(ch.act==='accept'){const v=await dlg({title:'Принять из ремонта?',text:'Локомотив вернётся в эксплуатацию, ремонтный случай будет закрыт.',fields:[{name:'c',label:'Комментарий (необязательно)',type:'area'}],ok:'Принять'});if(!v)return;
   await upd('maintenanceCases',c.id,{stage:'issued',prevStage:st,finishedAt:c.finishedAt||now(),acceptedByCustomer:true,updatedAt:now()});await hist(c.id,st,'issued','Принят заказчиком'+(v.c?': '+v.c:''));toast('Локомотив принят, он снова в эксплуатации','success')}
 });
+document.addEventListener('focusin',e=>{const t=e.target;if(t.closest('.dlg')&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.tagName==='SELECT'))setTimeout(()=>t.scrollIntoView({block:'center',behavior:'smooth'}),250)});
 document.addEventListener('click',async e=>{const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,dep=isDepot(),c=S.v==='loco'?curCase():null,l=D.locos.find(x=>x.id===S.id);
  if(a==='home'){locoSubs.forEach(u=>u());caseSubs.forEach(u=>u());S={v:'list'};return render()}
  if(a==='new')return openForm();if(a==='open')return openLoco(b.dataset.id);if(a==='seed')return seed();
