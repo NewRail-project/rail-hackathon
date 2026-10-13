@@ -146,7 +146,7 @@ function list(){
  const dep=isDepot(),org=myOrg(),ls=byNew(D.locos.filter(l=>dep||SEE_ALL||(org&&sameOrg(l.org,org))));
  let h=`<div class="toolbar"><button class="primary" data-a="new">+ Сдать локомотив в ремонт</button>${dep?'<button data-a="seed">Демо-данные</button>':''}</div>`;
  if(!dep&&!org&&!SEE_ALL)h+='<div class="empty">Введите название вашей организации в шапке, чтобы увидеть свои локомотивы</div>';
- else h+='<h3 class="sec">Парк локомотивов</h3>'+(ls.length?ls.map(l=>`<div class="kanban-item"><div class="row"><div class="id">${esc(l.number)} · ${esc(l.series)}</div>${status(l)}</div><div class="meta">${esc(l.org)} · ${Number(l.mileage||0).toLocaleString('ru-RU')} км</div><div class="actions"><button data-a="open" data-id="${l.id}">Паспорт</button><button class="danger" data-a="delloco" data-id="${l.id}">Удалить</button></div></div>`).join(''):'<div class="empty">Локомотивов пока нет</div>');
+ else h+='<h3 class="sec">Парк локомотивов</h3>'+(ls.length?ls.map(l=>`<div class="kanban-item"><div class="row"><div class="id">${esc(l.number)} · ${esc(l.series)}</div>${status(l)}</div><div class="meta">${esc(l.org)} · ${Number(l.mileage||0).toLocaleString('ru-RU')} км</div><div class="actions"><button data-a="open" data-id="${l.id}">Паспорт</button>${dep?'':'<button class="primary" data-a="lact" data-id="'+l.id+'">Действие</button>'}<button class="danger" data-a="delloco" data-id="${l.id}">Удалить</button></div></div>`).join(''):'<div class="empty">Локомотивов пока нет</div>');
  return h}
 
 const FORM=[['Локомотив',[['number','Номер*'],['series','Серия и модель*'],['type','Тип',['','Электровоз','Тепловоз','Маневровый']],['factoryNo','Заводской номер'],['year','Год выпуска','number'],['depot','Депо приписки'],['mileage','Текущий пробег, км*','number'],['mileageDate','Дата подтверждения пробега','date'],['lastTO','Дата последнего ТО','date'],['lastTOType','Вид последнего ТО',['',...TO]],['prevRepair','Предыдущий ремонт']]],
@@ -291,6 +291,33 @@ async function seed(){const t=now(),r=await addDoc(collection(db,'locomotives'),
  await ensureNodes(r.id,'Электровоз',['tm'],'система',{reason:'Демо: повышенный нагрев',to:'defect',force:true});
  await add('statusHistory',{caseId:c.id,from:'',to:'created',ts:t,comment:'Демо',by:'система'});toast('Демо-данные созданы. Организация: Демо-заказчик','success')}
 
+/* ---------- действия заказчика над локомотивом из списка ---------- */
+document.addEventListener('click',async e=>{const b=e.target.closest('[data-a="lact"]');if(!b)return;
+ const l=D.locos.find(x=>x.id===b.dataset.id);if(!l)return;
+ const c=activeCase(l.id),st=c&&c.stage,opts=[];
+ if(!c)opts.push(['send','Отправить в ремонт']);
+ if(c&&['created','waiting'].includes(st))opts.push(['recall','Отозвать заявку']);
+ if(c&&['customer','done'].includes(st))opts.push(['accept','Принять из ремонта']);
+ if(!opts.length)return toast('Локомотив в ремонте: «'+ST[st]+'». Сейчас действий у заказчика нет.');
+ const ch=await dlg({title:'Локомотив '+l.number+' · '+l.series,sub:c?'Сейчас: '+ST[st]:'Сейчас: в эксплуатации',fields:[{name:'act',label:'Что сделать?',type:'select',options:opts,value:opts[0][0]}],ok:'Далее'});if(!ch)return;
+ const hist=(cs,from,to,comment)=>add('statusHistory',{caseId:cs,from,to,ts:now(),comment,by:'заказчик'});
+ if(ch.act==='send'){
+  const v=await dlg({title:'Отправить в ремонт',sub:l.number+' · '+l.series,fields:[
+   {name:'reason',label:'Причина',type:'select',options:['Плановое ТО','Обнаруженная неисправность','Внеплановый ремонт','Диагностическая проверка','Повторное обращение','Другая'].map(x=>[x,x]),value:'Обнаруженная неисправность'},
+   {name:'d',label:'Описание проблемы / комментарий',type:'area'},
+   {name:'m',label:'Текущий пробег, км',type:'number',value:l.mileage||'',req:true}],ok:'Отправить',
+   validate:v=>Number(v.m)<(l.mileage||0)?'Пробег меньше сохранённого ('+km(l.mileage)+'). Корректировку вносит депо.':''});
+  if(!v)return;const mil=Number(v.m)||0,n=D.cases.filter(x=>x.locoId===l.id).length+1;
+  const intake={number:l.number,series:l.series,type:l.type||'',org:l.org,rep:l.rep||'',depot:l.depot||'',mileage:String(mil),reason:v.reason,description:v.d,source:'из эксплуатации'};
+  const r=await addDoc(collection(db,'maintenanceCases'),{locoId:l.id,locoNumber:l.number,org:l.org,caseNo:n,reason:v.reason,intake,stage:'created',planApproved:false,createdAt:now(),updatedAt:now()}).catch(err);if(!r)return;
+  if(mil!==Number(l.mileage||0)){await add('mileageReadings',{locoId:l.id,value:mil,ts:now(),source:'заказчик (отправка в ремонт)',by:l.rep||'заказчик',comment:'при отправке в ремонт'});await upd('locomotives',l.id,{mileage:mil})}
+  await hist(r.id,'','created','Отправлен в ремонт из эксплуатации'+(v.d?': '+v.d:''));try{await ensureNodes(l.id,l.type||'',[],'заказчик')}catch(_){}
+  toast('Локомотив отправлен в ремонт','success');return}
+ if(ch.act==='recall'){const v=await dlg({title:'Отозвать заявку?',text:'Локомотив вернётся в эксплуатацию.',fields:[{name:'r',label:'Причина',type:'area'}],ok:'Отозвать',cancel:'Назад',danger:true});if(!v)return;
+  await upd('maintenanceCases',c.id,{stage:'cancelled',cancelReason:'Отозвано заказчиком'+(v.r?': '+v.r:''),updatedAt:now()});await hist(c.id,st,'cancelled','Заявка отозвана заказчиком'+(v.r?': '+v.r:''));toast('Заявка отозвана','success');return}
+ if(ch.act==='accept'){const v=await dlg({title:'Принять из ремонта?',text:'Локомотив вернётся в эксплуатацию, ремонтный случай будет закрыт.',fields:[{name:'c',label:'Комментарий (необязательно)',type:'area'}],ok:'Принять'});if(!v)return;
+  await upd('maintenanceCases',c.id,{stage:'issued',prevStage:st,finishedAt:c.finishedAt||now(),acceptedByCustomer:true,updatedAt:now()});await hist(c.id,st,'issued','Принят заказчиком'+(v.c?': '+v.c:''));toast('Локомотив принят, он снова в эксплуатации','success')}
+});
 document.addEventListener('click',async e=>{const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,dep=isDepot(),c=S.v==='loco'?curCase():null,l=D.locos.find(x=>x.id===S.id);
  if(a==='home'){locoSubs.forEach(u=>u());caseSubs.forEach(u=>u());S={v:'list'};return render()}
  if(a==='new')return openForm();if(a==='open')return openLoco(b.dataset.id);if(a==='seed')return seed();
